@@ -11,6 +11,9 @@ class TimingMode(str, Enum):
 
 
 class ShotState(str, Enum):
+    '''
+    Various states throughout a shot that the experiment can be in.
+    '''
     IDLE = "IDLE"
     ARMED = "ARMED"
     CONDENSING = "CONDENSING"
@@ -28,6 +31,19 @@ class ShotState(str, Enum):
 
 @dataclass(frozen=True)
 class ExperimentConfig:
+    '''
+    ExperimentConfig: Configuration parameters for a ethane spray shot.
+
+    requested_delay_us: Time (us) between pump laser activation and freezing.
+    condensation_s: Time (s) for the sample to condensate on the grid.
+    settle_ms: Time (ms)
+    valve_pulse_us: Time (us) the ethane sprayer valve is open.
+    gate_spacing_mm: Distance (mm) between GATE_1 and GATE_2 that measures the speed of the ethane.
+    effective_distance_mm: Distance (mm) between GATE_2 and the sample grid.
+    activation_temp_k: temprature (K) in which to activate (?).
+    jetting_temp_k: temprature (K) of the liquid ethane.
+    '''
+
     requested_delay_us: float = 107.0
     condensation_s: float = 60.0
     settle_ms: float = 200.0
@@ -91,7 +107,7 @@ SIMULATION_SEQUENCE = (
 )
 
 SEQUENCE_TT = {
-        ShotState.ARMED:'''hell danny''',
+        ShotState.ARMED:'''Arming equipment.''',
         ShotState.CONDENSING:'Condensing ethane.',
         ShotState.POSITIONING:'Positioning grid.',
         ShotState.SETTLING:'',

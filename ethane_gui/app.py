@@ -7,7 +7,7 @@ from tkinter import messagebox, ttk
 from .model import ExperimentConfig, SIMULATION_SEQUENCE, ShotState, SEQUENCE_TT
 from .timeline import TimelineWindow
 from .transport import SimulationTransport
-from .tooltip import ToolTip, TOOLTIP_TEXT
+from .tooltip import ToolTip
 
 
 BG = "#101820"
