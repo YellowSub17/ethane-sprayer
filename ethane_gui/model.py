@@ -91,8 +91,7 @@ SIMULATION_SEQUENCE = (
 )
 
 SEQUENCE_TT = {
-        ShotState.ARMED:'''Arming sprayer. Lorem ipsum blah\\
-fajfoe,ergeq\n\newfjqwokjfe''',
+        ShotState.ARMED:'''hell danny''',
         ShotState.CONDENSING:'Condensing ethane.',
         ShotState.POSITIONING:'Positioning grid.',
         ShotState.SETTLING:'',
