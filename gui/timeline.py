@@ -5,17 +5,8 @@ import tkinter as tk
 from tkinter import ttk
 
 from .model import ExperimentConfig, TimingMode
+from .color_scheme import *
 
-
-BG = "#101820"
-PANEL = "#17232d"
-TEXT = "#e8f0f2"
-MUTED = "#8fa5b2"
-GREEN = "#47d18c"
-AMBER = "#f1b84b"
-ORANGE = "#f07a3f"
-MAGENTA = "#ef4da8"
-BLUE = "#72a7e8"
 
 
 @dataclass(frozen=True)

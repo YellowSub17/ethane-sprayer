@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from ethane_gui.app import main
+from gui.app import main
 
 
 if __name__ == "__main__":

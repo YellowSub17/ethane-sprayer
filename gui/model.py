@@ -45,32 +45,33 @@ class ExperimentConfig:
     '''
 
     requested_delay_us: float = 107.0
-    condensation_s: float = 60.0
-    settle_ms: float = 200.0
-    valve_pulse_us: float = 650.0
+    # condensation_s: float = 60.0
+    # settle_ms: float = 200.0
+    # valve_pulse_us: float = 650.0
     gate_spacing_mm: float = 7.0
     effective_distance_mm: float = 0.92
-    activation_temp_k: float = 290.0
-    jetting_temp_k: float = 95.0
+    # activation_temp_k: float = 290.0
+    # jetting_temp_k: float = 95.0
 
     def validate(self) -> None:
-        positive = {
-            "requested delay": self.requested_delay_us,
-            "condensation time": self.condensation_s,
-            "settling time": self.settle_ms,
-            "valve pulse": self.valve_pulse_us,
-            "gate spacing": self.gate_spacing_mm,
-            "effective distance": self.effective_distance_mm,
-            "activation temperature": self.activation_temp_k,
-            "jetting temperature": self.jetting_temp_k,
-        }
-        for name, value in positive.items():
-            if value <= 0:
-                raise ValueError(f"{name} must be greater than zero")
-        if self.settle_ms < 200.0:
-            raise ValueError("settling time must be at least 200 ms")
-        if self.effective_distance_mm >= self.gate_spacing_mm:
-            raise ValueError("effective distance must be smaller than gate spacing")
+        pass
+       #  positive = {
+            # "requested delay": self.requested_delay_us,
+            # "condensation time": self.condensation_s,
+            # "settling time": self.settle_ms,
+            # "valve pulse": self.valve_pulse_us,
+            # "gate spacing": self.gate_spacing_mm,
+            # "effective distance": self.effective_distance_mm,
+            # "activation temperature": self.activation_temp_k,
+            # "jetting temperature": self.jetting_temp_k,
+        # }
+        # for name, value in positive.items():
+            # if value <= 0:
+                # raise ValueError(f"{name} must be greater than zero")
+        # if self.settle_ms < 200.0:
+            # raise ValueError("settling time must be at least 200 ms")
+        # if self.effective_distance_mm >= self.gate_spacing_mm:
+            # raise ValueError("effective distance must be smaller than gate spacing")
 
     @property
     def timing_mode(self) -> TimingMode:
