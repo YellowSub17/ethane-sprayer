@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("HOST",default='0.0.0.0')
 parser.add_argument("PORT",default=5001)
 
-args. parser.parse_args()
+args = parser.parse_args()
 
 
 
