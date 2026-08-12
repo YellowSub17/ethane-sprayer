@@ -7,7 +7,8 @@ import argparse
 parser = argparse.ArgumentParser(
         description="TCP/UArt bridge between gui and pico for the ethane sprayer project"
         )
-parser.add_argument("HOST",default='0.0.0.0', type=str)
+# parser.add_argument("HOST",default='0.0.0.0', type=str)
+HOST = '0.0.0.0'
 parser.add_argument("PORT",default=5001, type=int)
 
 args = parser.parse_args()
