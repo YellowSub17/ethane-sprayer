@@ -4,9 +4,10 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from .model import ExperimentConfig, SIMULATION_SEQUENCE, ShotState
+from .model import ExperimentConfig, SIMULATION_SEQUENCE, ShotState, SEQUENCE_TT
 from .timeline import TimelineWindow
 from .transport import SimulationTransport
+from .tooltip import ToolTip, TOOLTIP_TEXT
 
 
 BG = "#101820"
@@ -104,6 +105,7 @@ class EthaneControlApp(tk.Tk):
                 padx=10,
                 pady=5,
             )
+            ToolTip(label, SEQUENCE_TT[state])
             label.grid(row=index // 2, column=index % 2, sticky="ew", padx=3, pady=3)
             state_frame.columnconfigure(index % 2, weight=1)
             self._state_labels[state] = label

@@ -90,3 +90,20 @@ SIMULATION_SEQUENCE = (
     ShotState.COMPLETE,
 )
 
+SEQUENCE_TT = {
+        ShotState.ARMED:'''Arming sprayer. Lorem ipsum blah\\
+fajfoe,ergeq\n\newfjqwokjfe''',
+        ShotState.CONDENSING:'Condensing ethane.',
+        ShotState.POSITIONING:'Positioning grid.',
+        ShotState.SETTLING:'',
+        ShotState.JET_TRIGGERED:'Spraying ethane jet.',
+        ShotState.GATE_1_SEEN:'Jet passing through first gate.',
+        ShotState.GATE_2_SEEN:'Jet passing through second gate.',
+        ShotState.LASER_SCHEDULED:'Pump laser firing.',
+        ShotState.ARRIVAL_CHECKED:'Ethane impacts grid.',
+        ShotState.PLUNGING:'Plunging grid.',
+        ShotState.COMPLETE:'Complete.',
+        }
+
+
+
