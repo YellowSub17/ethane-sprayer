@@ -1,5 +1,7 @@
 # Ethane Sprayer Control GUI — prototype 2
 
+## This module/readme was originally AI generated, but I have cut a lot of it so this might not be up to date anymore ]
+
 This is a hardware-free Raspberry Pi GUI prototype for the Ethane Sprayer setup.
 It lets you develop and review the operator workflow before valves, laser
 electronics, photodiodes, motors, or the RP2040 firmware are connected.
