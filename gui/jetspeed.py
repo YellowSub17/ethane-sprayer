@@ -16,6 +16,7 @@ class JetSpeedWindow(tk.Toplevel):
 
     def __init__(self, parent: tk.Misc) -> None:
         super().__init__(parent)
+        self.parent = parent
         self.title("Ethane Sprayer — Measure Jet Speed")
         # self.geometry("600x600")
         # self.minsize(500, 500)
@@ -66,7 +67,6 @@ class JetSpeedWindow(tk.Toplevel):
 
 
 
-    # def _build_footer(s,ccelf) -> None:
         lower_body = ttk.Frame(self)
         lower_body.grid(row=2, column=0, sticky="ew", padx=20, pady=(10, 20))
         button_container = ttk.Frame(lower_body)
@@ -75,43 +75,42 @@ class JetSpeedWindow(tk.Toplevel):
         ttk.Button(button_container, text="JET", command=self.measure_jet).grid(row=0, column=0, rowspan=1)
         ttk.Button(button_container, text="Plot", command=self.update_plot).grid(row=0, column=1, rowspan=1)
         # --- Section B: x1, x2, x3 Inputs ---
-        self.x_entries = {}
+        self.entries = {}
         for idx, label_text in enumerate(["x1", "x2", "x3"]):
             lbl = ttk.Label(lower_body, text=label_text)
             lbl.grid(row=idx, column=1, padx=(0, 5), pady=3, sticky="e")
 
             ent = ttk.Entry(lower_body, width=12)
             ent.grid(row=idx, column=2, padx=(0, 15), pady=3, sticky="w")
-            self.x_entries[label_text] = ent
+            self.entries[label_text] = ent
 
         # --- Section C: t1, t2, t3 Inputs ---
-        self.t_entries = {}
         for idx, label_text in enumerate(["t1", "t2", "t3"]):
             lbl = ttk.Label(lower_body, text=label_text)
             lbl.grid(row=idx, column=3, padx=(0, 5), pady=3, sticky="e")
 
             ent = ttk.Entry(lower_body, width=12)
             ent.grid(row=idx, column=4, padx=(0, 15), pady=3, sticky="w")
-            self.t_entries[label_text] = ent
+            self.entries[label_text] = ent
 
         lbl = ttk.Label(lower_body, text='tp')
         lbl.grid(row=0, column=5, padx=(0, 5), pady=3, sticky="e")
         ent = ttk.Entry(lower_body, width=12)
         ent.grid(row=0, column=6, padx=(0, 15), pady=3, sticky="w")
-        self.t_entries['tp'] = ent
+        self.entries['tp'] = ent
 
         lbl = ttk.Label(lower_body, text='ta')
         lbl.grid(row=1, column=5, padx=(0, 5), pady=3, sticky="e")
         ent = ttk.Entry(lower_body, width=12)
         ent.grid(row=1, column=6, padx=(0, 15), pady=3, sticky="w")
-        self.t_entries['ta'] = ent
+        self.entries['ta'] = ent
 
-        self.x_entries['x1'].insert(0,2)
-        self.x_entries['x2'].insert(0,7.0)
-        self.x_entries['x3'].insert(0,0.92)
-        self.x_entries['x2'].configure(state="disabled")
+        self.entries['x1'].insert(0,2)
+        self.entries['x2'].insert(0,7.0)
+        self.entries['x3'].insert(0,0.92)
+        self.entries['x2'].configure(state="disabled")
 
-        self.t_entries['ta'].insert(0,100.5)
+        self.entries['ta'].insert(0,100.5)
 
 
 
@@ -128,6 +127,8 @@ class JetSpeedWindow(tk.Toplevel):
 
     def measure_jet(self):
 
+        self.parent._log('Spraying Jet')
+        self.parent.send_tcp_msg('Hello World')
 
         t1 = round(random.gauss(8575, 50),3) #8.575 ms
         t2 = round(random.gauss(11000, 50),3) #11 ms
@@ -136,18 +137,24 @@ class JetSpeedWindow(tk.Toplevel):
 
         tp = round(self.predicted_arrival_us(t1,t2),3)
 
+        self.entries['t1'].delete(0, tk.END)
+        self.entries['t2'].delete(0, tk.END)
+        self.entries['t3'].delete(0, tk.END)
+        self.entries['tp'].delete(0, tk.END)
+
+        self.entries['t1'].insert(0, t1)
+        self.entries['t2'].insert(0, t2)
+        self.entries['t3'].insert(0, t3)
+        self.entries['tp'].insert(0, tp)
 
 
 
-        self.t_entries['t1'].delete(0, tk.END)
-        self.t_entries['t2'].delete(0, tk.END)
-        self.t_entries['t3'].delete(0, tk.END)
-        self.t_entries['tp'].delete(0, tk.END)
+    def _update_entry(self, key, value):
+        self.entries[key].delete(0, tk.END)
+        self.entries[key].insert(0, value)
 
-        self.t_entries['t1'].insert(0, t1)
-        self.t_entries['t2'].insert(0, t2)
-        self.t_entries['t3'].insert(0, t3)
-        self.t_entries['tp'].insert(0, tp)
+
+
 
 
 
@@ -157,11 +164,11 @@ class JetSpeedWindow(tk.Toplevel):
     def update_plot(self):
         self.measure_jet()
         self.setup_axes()
-        t1 = self.get_float_val(self.t_entries['t1'])
-        t2 = self.get_float_val(self.t_entries['t2'])
-        t3 = self.get_float_val(self.t_entries['t3'])
-        tp = self.get_float_val(self.t_entries['tp'])
-        ta = tp-self.get_float_val(self.t_entries['ta'])
+        t1 = self.get_float_val(self.entries['t1'])
+        t2 = self.get_float_val(self.entries['t2'])
+        t3 = self.get_float_val(self.entries['t3'])
+        tp = self.get_float_val(self.entries['tp'])
+        ta = tp-self.get_float_val(self.entries['ta'])
 
         # self.axes[0].vlines(0,  ymin=0,ymax=1, color="tab:blue", lw=2, label='Jet')
 
@@ -203,8 +210,8 @@ class JetSpeedWindow(tk.Toplevel):
 
 
     def predicted_arrival_us(self, gate_1_us: float, gate_2_us: float) -> float:
-        x2 = self.get_float_val(self.x_entries['x2'])
-        x3 = self.get_float_val(self.x_entries['x3'])
+        x2 = self.get_float_val(self.entries['x2'])
+        x3 = self.get_float_val(self.entries['x3'])
 
         if gate_2_us <= gate_1_us:
             raise ValueError("Gate 2 timestamp must be later than Gate 1")
