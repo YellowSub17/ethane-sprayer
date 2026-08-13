@@ -35,6 +35,7 @@ class EthaneControlApp(tk.Tk):
         self._build_header()
         self._build_body()
         self._build_footer()
+        self.open_jet_speed_window()
         # self._load_defaults()
         # self._set_state(ShotState.IDLE)
 
