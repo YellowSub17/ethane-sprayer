@@ -128,7 +128,7 @@ class JetSpeedWindow(tk.Toplevel):
     def measure_jet(self):
 
         self.parent._log('Spraying Jet')
-        self.parent.send_tcp_msg('Hello World')
+        self.parent.send_tcp_msg('CMD: spray jet')
 
         t1 = round(random.gauss(8575, 50),3) #8.575 ms
         t2 = round(random.gauss(11000, 50),3) #11 ms

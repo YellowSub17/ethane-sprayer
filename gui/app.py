@@ -117,6 +117,8 @@ class EthaneControlApp(tk.Tk):
     def send_tcp_msg(self, msg: str ):
 
         """Connects to the TCP server, sends the message, and closes the connection."""
+        ## need to add \n to the end of the msg
+
         try:
             # Create a TCP/IP socket
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
