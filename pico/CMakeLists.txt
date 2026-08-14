@@ -17,16 +17,16 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 # 4. Define your executable and linked libraries
-add_executable(pico_firmware main.c)
+add_executable(main main.c)
 
-target_link_libraries(pico_firmware
+target_link_libraries(main
     pico_stdlib
     pico_multicore
     hardware_uart
     hardware_gpio
 )
 
-pico_enable_stdio_usb(pico_firmware 1)
-pico_enable_stdio_uart(pico_firmware 0)
+pico_enable_stdio_usb(main 1)
+pico_enable_stdio_uart(main 0)
 
-pico_add_extra_outputs(pico_firmware)
+pico_add_extra_outputs(main)

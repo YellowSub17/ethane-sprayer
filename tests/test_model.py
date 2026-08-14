@@ -2,7 +2,7 @@ import unittest
 
 from ethane_gui.model import ExperimentConfig, TimingMode
 from ethane_gui.timeline import build_timeline_scenario
-
+ 
 
 class ExperimentConfigTests(unittest.TestCase):
     def test_default_configuration_is_valid(self):

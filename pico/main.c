@@ -1,110 +1,77 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
-#include "hardware/uart.h"
 #include "hardware/gpio.h"
 
-// --- Pin Definitions ---
-#define UART_ID uart0
-#define BAUD_RATE 115200
-#define UART_TX_PIN 0
-#define UART_RX_PIN 1
+const uint SENSOR_PINS[] = {13,14,15};
+const size_t NUM_SENSORS = 3;
 
-#define TRIGGER_SENSOR_PIN 14  // Input signal from liquid jet sensor
-#define LASER_GATE_PIN     15  // Output gate to laser pulse driver
+#define DEBOUNCE_US 50000
 
-// --- Shared Volatile Variables between Cores ---
-volatile uint32_t laser_delay_us = 100; // Default 100 µs delay
-volatile bool system_armed = false;
 
-// ============================================================================
-// CORE 1: Time-Critical Hardware Trigger Loop
-// ============================================================================
-void core1_entry() {
-    gpio_init(TRIGGER_SENSOR_PIN);
-    gpio_set_dir(TRIGGER_SENSOR_PIN, GPIO_IN);
-    gpio_pull_down(TRIGGER_SENSOR_PIN);
+static uint64_t last_trigger_time[30] = {0};
 
-    gpio_init(LASER_GATE_PIN);
-    gpio_set_dir(LASER_GATE_PIN, GPIO_OUT);
-    gpio_put(LASER_GATE_PIN, 0);
 
-    while (1) {
-        // Wait until the system is armed by the Pi
-        if (system_armed) {
 
-            // Tight polling loop waiting for input sensor HIGH
-            // Deterministic response without interrupt latency
-            while (!gpio_get(TRIGGER_SENSOR_PIN)) {
-                tight_loop_contents();
-            }
+void gpio_callback(uint gpio, uint32_t events) {
+    uint64_t now = time_us_64();
 
-            // Precise Microsecond Delay
-            sleep_us(laser_delay_us);
+    // Check if enough time has passed since the last trigger on THIS specific pin
+    if ((now - last_trigger_time[gpio]) < DEBOUNCE_US) {
+        return; // Ignore contact bounce noise!
+    }
 
-            // Pulse Laser Gate HIGH (e.g., 50 µs pulse width)
-            gpio_put(LASER_GATE_PIN, 1);
-            sleep_us(50);
-            gpio_put(LASER_GATE_PIN, 0);
+    if (events & GPIO_IRQ_EDGE_FALL) {
+        // Record the valid trigger time
+        last_trigger_time[gpio] = now;
 
-            // Disarm system after single shot for safety
-            system_armed = false;
-            printf("[Core 1] Laser Fired! System Disarmed.\n");
-        }
-
-        tight_loop_contents();
+        double timestamp_sec = now / 1000000.0;
+        printf("Dark Detected | Pin: %2d | Time: %.6f s\n", gpio, timestamp_sec);
     }
 }
 
-// ============================================================================
-// CORE 0: Communication & Parameter Parsing (UART / USB)
-// ============================================================================
-int main() {
-    stdio_init_all(); // Initialize USB debug console
+int main(){
+    stdio_init_all();
 
-    // Setup UART interface connected to Raspberry Pi
-    uart_init(UART_ID, BAUD_RATE);
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+    sleep_ms(2000);
+    printf("\n");
+    printf("Starting Light Sensor Logging\n");
+    printf("_____________________________\n");
+    for (size_t i=0; i<NUM_SENSORS; i++) {
+        uint pin = SENSOR_PINS[i];
+        gpio_init(pin);
+        gpio_set_dir(pin, GPIO_IN);
+        gpio_pull_up(pin);
 
-    // Launch Core 1
-    multicore_launch_core1(core1_entry);
+        gpio_set_irq_enabled_with_callback(pin, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
 
-    char buffer[64];
-    int idx = 0;
-
-    printf("Pico Control Firmware Initialized.\n");
-
-    while (1) {
-        // Read incoming characters from Pi over UART
-        while (uart_is_readable(UART_ID)) {
-            char c = uart_getc(UART_ID);
-
-            if (c == '\n' || c == '\r') {
-                buffer[idx] = '\0';
-
-                // Parse command string e.g., "DELAY:120" or "ARM"
-                if (strncmp(buffer, "DELAY:", 6) == 0) {
-                    laser_delay_us = atoi(&buffer[6]);
-                    printf("[Core 0] Updated Laser Delay to %lu us\n", laser_delay_us);
-                }
-                else if (strcmp(buffer, "ARM") == 0) {
-                    system_armed = true;
-                    printf("[Core 0] SYSTEM ARMED - Awaiting trigger sensor...\n");
-                }
-                else if (strcmp(buffer, "DISARM") == 0) {
-                    system_armed = false;
-                    printf("[Core 0] SYSTEM DISARMED\n");
-                }
-
-                idx = 0; // Reset buffer
-            } else if (idx < sizeof(buffer) - 1) {
-                buffer[idx++] = c;
-            }
-        }
-
-        tight_loop_contents();
     }
+    while (true) {
+        sleep_ms(1000);
+    }
+
+
+    return 0;
+}
+
+int hello() {
+    // Initialize standard I/O over USB/UART based on CMake config
+    stdio_init_all();
+
+    // Initialize the onboard LED
+    const uint LED_PIN = PICO_DEFAULT_LED_PIN;
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT);
+
+    uint64_t count = 0;
+
+    while (true) {
+        gpio_put(LED_PIN, 1);
+        printf("Hello from Pico C SDK! Count: %llu\n", count++);
+        sleep_ms(500);
+
+        gpio_put(LED_PIN, 0);
+        sleep_ms(500);
+    }
+
+    return 0;
 }
