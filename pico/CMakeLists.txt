@@ -19,7 +19,7 @@ pico_sdk_init()
 # 4. Define your executable and linked libraries
 add_executable(main main.c)
 
-pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/laser_time.pio)
+pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/laser_timer.pio)
 
 
 

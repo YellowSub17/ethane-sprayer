@@ -1,9 +1,7 @@
-.program laser_timer
-
+.program laser_gate
 
 .wrap_target
-    wait 1 gpio 0
-    wait 0 gpio 0
-    mv osr, x
-    push noblock
+    wait 1 pin 0        ; Wait for beam to be clear (HIGH)
+    wait 0 pin 0        ; Wait for beam to break (LOW)
+    push noblock        ; Push event token to C immediately
 .wrap
