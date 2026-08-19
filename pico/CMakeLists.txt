@@ -19,11 +19,19 @@ pico_sdk_init()
 # 4. Define your executable and linked libraries
 add_executable(main main.c)
 
+pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/laser_time.pio)
+
+
+
+
 target_link_libraries(main
     pico_stdlib
     pico_multicore
     hardware_uart
     hardware_gpio
+    hardware_pio
+    hardware_dma
+    hardware_adc
 )
 
 pico_enable_stdio_usb(main 1)

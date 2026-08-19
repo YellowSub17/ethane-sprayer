@@ -1,0 +1,9 @@
+.program laser_timer
+
+
+.wrap_target
+    wait 1 gpio 0
+    wait 0 gpio 0
+    mv osr, x
+    push noblock
+.wrap
