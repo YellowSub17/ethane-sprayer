@@ -1,110 +1,75 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
-#include "hardware/uart.h"
-#include "hardware/gpio.h"
+#include "hardware/pio.h"
+#include "hardware/structs/systick.h"
+#include "laser_timer.pio.h"
 
-// --- Pin Definitions ---
-#define UART_ID uart0
-#define BAUD_RATE 115200
-#define UART_TX_PIN 0
-#define UART_RX_PIN 1
+#define GATE_A_PIN 13
+#define GATE_B_PIN 14
 
-#define TRIGGER_SENSOR_PIN 14  // Input signal from liquid jet sensor
-#define LASER_GATE_PIN     15  // Output gate to laser pulse driver
-
-// --- Shared Volatile Variables between Cores ---
-volatile uint32_t laser_delay_us = 100; // Default 100 µs delay
-volatile bool system_armed = false;
-
-// ============================================================================
-// CORE 1: Time-Critical Hardware Trigger Loop
-// ============================================================================
-void core1_entry() {
-    gpio_init(TRIGGER_SENSOR_PIN);
-    gpio_set_dir(TRIGGER_SENSOR_PIN, GPIO_IN);
-    gpio_pull_down(TRIGGER_SENSOR_PIN);
-
-    gpio_init(LASER_GATE_PIN);
-    gpio_set_dir(LASER_GATE_PIN, GPIO_OUT);
-    gpio_put(LASER_GATE_PIN, 0);
-
-    while (1) {
-        // Wait until the system is armed by the Pi
-        if (system_armed) {
-
-            // Tight polling loop waiting for input sensor HIGH
-            // Deterministic response without interrupt latency
-            while (!gpio_get(TRIGGER_SENSOR_PIN)) {
-                tight_loop_contents();
-            }
-
-            // Precise Microsecond Delay
-            sleep_us(laser_delay_us);
-
-            // Pulse Laser Gate HIGH (e.g., 50 µs pulse width)
-            gpio_put(LASER_GATE_PIN, 1);
-            sleep_us(50);
-            gpio_put(LASER_GATE_PIN, 0);
-
-            // Disarm system after single shot for safety
-            system_armed = false;
-            printf("[Core 1] Laser Fired! System Disarmed.\n");
-        }
-
-        tight_loop_contents();
-    }
+// Enable ARM Cortex-M0+ cycle counter (runs at exact 125MHz / 8ns per count)
+void init_cycle_counter() {
+    systick_hw->csr = M0PLUS_SYST_CSR_ENABLE_BITS | M0PLUS_SYST_CSR_CLKSOURCE_BITS;
+    systick_hw->rvr = 0x00FFFFFF; // 24-bit timer auto-reload
 }
 
-// ============================================================================
-// CORE 0: Communication & Parameter Parsing (UART / USB)
-// ============================================================================
 int main() {
-    stdio_init_all(); // Initialize USB debug console
+    stdio_init_all();
+    while (!stdio_usb_connected()) sleep_ms(100);
 
-    // Setup UART interface connected to Raspberry Pi
-    uart_init(UART_ID, BAUD_RATE);
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+    init_cycle_counter();
+    printf("Starting Dual-Gate Timer with 8ns Hardware Cycle Accuracy...\n");
 
-    // Launch Core 1
-    multicore_launch_core1(core1_entry);
+    PIO pio = pio0;
 
-    char buffer[64];
-    int idx = 0;
+    pio_gpio_init(pio, GATE_A_PIN);
+    pio_gpio_init(pio, GATE_B_PIN);
 
-    printf("Pico Control Firmware Initialized.\n");
+    uint offset = pio_add_program(pio, &laser_gate_program);
+
+    // Setup SM0 for Gate A (GPIO 13)
+    pio_sm_config c0 = laser_gate_program_get_default_config(offset);
+    sm_config_set_in_pins(&c0, GATE_A_PIN);
+    pio_sm_init(pio, 0, offset, &c0);
+
+    // Setup SM1 for Gate B (GPIO 14)
+    pio_sm_config c1 = laser_gate_program_get_default_config(offset);
+    sm_config_set_in_pins(&c1, GATE_B_PIN);
+    pio_sm_init(pio, 1, offset, &c1);
+
+    // Enable both SMs concurrently
+    pio_set_sm_mask_enabled(pio, (1u << 0) | (1u << 1), true);
+
+    uint32_t tick_a = 0;
+    uint32_t tick_b = 0;
 
     while (1) {
-        // Read incoming characters from Pi over UART
-        while (uart_is_readable(UART_ID)) {
-            char c = uart_getc(UART_ID);
-
-            if (c == '\n' || c == '\r') {
-                buffer[idx] = '\0';
-
-                // Parse command string e.g., "DELAY:120" or "ARM"
-                if (strncmp(buffer, "DELAY:", 6) == 0) {
-                    laser_delay_us = atoi(&buffer[6]);
-                    printf("[Core 0] Updated Laser Delay to %lu us\n", laser_delay_us);
-                }
-                else if (strcmp(buffer, "ARM") == 0) {
-                    system_armed = true;
-                    printf("[Core 0] SYSTEM ARMED - Awaiting trigger sensor...\n");
-                }
-                else if (strcmp(buffer, "DISARM") == 0) {
-                    system_armed = false;
-                    printf("[Core 0] SYSTEM DISARMED\n");
-                }
-
-                idx = 0; // Reset buffer
-            } else if (idx < sizeof(buffer) - 1) {
-                buffer[idx++] = c;
-            }
+        // Gate A tripped
+        if (!pio_sm_is_rx_fifo_empty(pio, 0)) {
+            tick_a = systick_hw->cvr; // Read current 8ns hardware cycle register
+            pio_sm_get_blocking(pio, 0);
+            printf("[Gate A] Tripped at Cycle: %u\n", tick_a);
         }
 
-        tight_loop_contents();
+        // Gate B tripped
+        if (!pio_sm_is_rx_fifo_empty(pio, 1)) {
+            tick_b = systick_hw->cvr; // Read current 8ns hardware cycle register
+            pio_sm_get_blocking(pio, 1);
+            printf("[Gate B] Tripped at Cycle: %u\n", tick_b);
+        }
+
+        // Calculate delta when both have triggered
+        if (tick_a != 0 && tick_b != 0) {
+            // SysTick counts DOWN from 0xFFFFFF
+            int32_t cycle_delta = (int32_t)(tick_a - tick_b);
+            if (cycle_delta < 0) cycle_delta += 0x1000000; // Handle 24-bit wrap
+
+            double ns_delta = cycle_delta * 8.0;
+            printf("--> Flight Delta: %d cycles | %.2f ns (%.3f us)\n\n",
+                   cycle_delta, ns_delta, ns_delta / 1000.0);
+
+            tick_a = 0;
+            tick_b = 0;
+        }
     }
 }

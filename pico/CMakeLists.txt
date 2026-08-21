@@ -1,40 +1,31 @@
 cmake_minimum_required(VERSION 3.13)
 
-# 1. Explicitly tell CMake where the SDK lives before initializing it
-set(PICO_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/pico-sdk")
+# Include Pico SDK macros
+include(pico_sdk_import.cmake)
 
-# 2. Include the SDK's internal setup script directly
-include(${PICO_SDK_PATH}/pico_sdk_init.cmake)
-
-project(ethan_sprayer_pico C CXX ASM)
+project(laser_timer C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-# Disable picotool auto-build
-#set(PICO_NO_PICOTOOL 1)
-
-# 3. Initialize the SDK
 pico_sdk_init()
 
-# 4. Define your executable and linked libraries
-add_executable(main main.c)
-
-pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/laser_timer.pio)
-
-
-
-
-target_link_libraries(main
-    pico_stdlib
-    pico_multicore
-    hardware_uart
-    hardware_gpio
-    hardware_pio
-    hardware_dma
-    hardware_adc
+# Add your executable
+add_executable(main
+    main.c
 )
 
+# Generate PIO header file
+pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/laser_timer.pio)
+
+# Enable USB stdio output, disable UART
 pico_enable_stdio_usb(main 1)
 pico_enable_stdio_uart(main 0)
 
+# LINK HARDWARE LIBRARIES HERE
+target_link_libraries(main
+    pico_stdlib
+    hardware_pio
+)
+
+# Create map/bin/hex/uf2 file outputs
 pico_add_extra_outputs(main)
