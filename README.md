@@ -2,6 +2,13 @@
 
 Control software for running the ethane sprayer
 
+## Requirements
+
+sudo apt install picotool
+matplotlib
+numpy
+
+
 ## `run_gui.py`
 Run the gui software to send tcp commands to the Raspberry Pi. Can be run locally on the pi as well. See `gui/` for more details.
 

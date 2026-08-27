@@ -134,7 +134,7 @@ class EthaneControlApp(tk.Tk):
 
 
         except Exception as e:
-            self._log(f"Failed to send TCP message to {host}:{port}")
+            self._log(f"Failed to send TCP message to {self.host}:{self.port}")
             self._log(f'Message: "{msg}"')
 
 
