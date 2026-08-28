@@ -1,4 +1,16 @@
-*.zip
-__pycache__/
-pico/build/
-venv
+# Build outputs
+build/
+**/build/
+*_deps/
+
+# MicroPython firmware downloads
+*.uf2
+pico-py/micropython.uf2
+
+# Submodule directories (tracked via .gitmodules)
+pico-c/pico-sdk/
+
+# Virtual environments & Python cache
+venv/
+**/__pycache__/
+*.pyc

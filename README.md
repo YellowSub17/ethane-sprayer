@@ -7,6 +7,7 @@ Control software for running the ethane sprayer
 sudo apt install picotool
 matplotlib
 numpy
+pip install mpremote
 
 
 ## `run_gui.py`
