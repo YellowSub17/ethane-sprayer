@@ -46,7 +46,7 @@ static inline uint32_t get_cycle_count_32() {
     return (uint32_t)(total_cycles & 0xFFFFFFFF);
 }
 
-int main() {
+int laser_gate() {
     stdio_init_all();
     while (!stdio_usb_connected()) sleep_ms(100);
 

@@ -12,8 +12,9 @@ int main() {
         // uint32_t pulse = laser_read_gate_us();
 
         // --- Option 3: Test Motor ---
-         motor_step(200);
-         sleep_ms(1000);
+         /*motor_step(200);*/
+         /*sleep_ms(1000);*/
+        laser_gate();
     }
     return 0;
 }
