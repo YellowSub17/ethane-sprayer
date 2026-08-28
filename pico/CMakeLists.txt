@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.13)
 
+
 # Include Pico SDK macros
+
+set(PICO_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/pico-sdk")
 include(pico_sdk_import.cmake)
 
 project(laser_timer C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+set(PICOTOOL_FORCE_FETCH_FROM_GIT ON)
 
 pico_sdk_init()
 
