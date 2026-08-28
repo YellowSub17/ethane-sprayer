@@ -1,6 +1,6 @@
 
 
-from blink import main
+from src.blink import main
 
 
 main()
