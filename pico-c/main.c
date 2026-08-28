@@ -1,24 +1,18 @@
 #include "pico/stdlib.h"
+#include "hardware.h"  // Removed "src/" prefix
 
 int main() {
     stdio_init_all();
 
-    // Initialize the onboard LED pin (GPIO 25)
-    gpio_init(PICO_DEFAULT_LED_PIN);
-    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-
     while (true) {
-        // Blink 3 times (0.25s ON, 0.25s OFF)
-        for (int i = 0; i < 3; i++) {
-            gpio_put(PICO_DEFAULT_LED_PIN, 1);
-            sleep_ms(250);
-            gpio_put(PICO_DEFAULT_LED_PIN, 0);
-            sleep_ms(250);
-        }
+        // --- Option 1: Test LED ---
+        blink_led();
 
-        // Wait 1 second before repeating pattern
-        sleep_ms(1000);
+        // --- Option 2: Test Laser Gate ---
+        // uint32_t pulse = laser_read_gate_us();
+
+        // --- Option 3: Test Motor ---
+        // motor_step(200);
     }
-
     return 0;
 }
