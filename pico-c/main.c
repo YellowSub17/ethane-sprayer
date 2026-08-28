@@ -6,13 +6,14 @@ int main() {
 
     while (true) {
         // --- Option 1: Test LED ---
-        blink_led();
+        /*blink_led();*/
 
         // --- Option 2: Test Laser Gate ---
         // uint32_t pulse = laser_read_gate_us();
 
         // --- Option 3: Test Motor ---
-        // motor_step(200);
+         motor_step(200);
+         sleep_ms(1000);
     }
     return 0;
 }

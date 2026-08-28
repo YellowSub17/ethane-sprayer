@@ -14,13 +14,13 @@ pico_sdk_init()
 # 1. Grab all C source files inside src/
 file(GLOB SRC_FILES "src/*.c")
 
-# 2. Add executable with main.c + all src/*.c files
+# 2. Add executable
 add_executable(main
     main.c
     ${SRC_FILES}
 )
 
-# 3. Add src/ to the include search paths
+# 3. ADD THIS LINE: Tells the compiler to look inside src/ for header files
 target_include_directories(main PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src)
 
 # 4. Generate PIO header file from src/laser_timer.pio
