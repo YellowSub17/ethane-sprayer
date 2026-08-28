@@ -14,6 +14,7 @@ int main() {
         // --- Option 3: Test Motor ---
          /*motor_step(200);*/
          /*sleep_ms(1000);*/
+
         laser_gate();
     }
     return 0;
