@@ -1,5 +1,5 @@
 #include "pico/stdlib.h"
-#include "hardware.h"  // Removed "src/" prefix
+#include "hardware.h"
 
 int main() {
     stdio_init_all();
