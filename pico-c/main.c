@@ -1,8 +1,18 @@
 #include "pico/stdlib.h"
 #include "hardware.h"
+#include <stdio.h>
+
+
+void other_function() {
+    printf("wowee");
+}
+
+
 
 int main() {
     stdio_init_all();
+    printf("hello");
+    other_function();
 
     while (true) {
         // --- Option 1: Test LED ---
@@ -16,6 +26,9 @@ int main() {
          /*sleep_ms(1000);*/
 
         laser_gate();
+
     }
     return 0;
 }
+
+

@@ -1,40 +1,44 @@
 cmake_minimum_required(VERSION 3.13)
 
-# Include Pico SDK macros
-set(PICO_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/pico-sdk")
+# 1. Include Pico SDK import macro FIRST
 include(pico_sdk_import.cmake)
 
+# 2. Declare project
 project(laser_timer C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-set(PICOTOOL_FORCE_FETCH_FROM_GIT ON)
 
+# DELETE OR COMMENT OUT THIS LINE:
+# set(PICOTOOL_FORCE_FETCH_FROM_GIT ON)
+
+# 3. Initialize SDK
 pico_sdk_init()
 
-# 1. Grab all C source files inside src/
+# 4. Source files & Includes
 file(GLOB SRC_FILES "src/*.c")
 
-# 2. Add executable
+# Treat implicit function declarations and missing headers as hard errors
+add_compile_options($<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration>)
+
 add_executable(main
     main.c
     ${SRC_FILES}
 )
 
-# 3. ADD THIS LINE: Tells the compiler to look inside src/ for header files
 target_include_directories(main PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src)
 
-# 4. Generate PIO header file from src/laser_timer.pio
+# 5. PIO Headers
 pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/src/laser_timer.pio)
 
-# Enable USB stdio output, disable UART
+# 6. Stdio & Libraries
 pico_enable_stdio_usb(main 1)
 pico_enable_stdio_uart(main 0)
 
-# LINK HARDWARE LIBRARIES HERE
 target_link_libraries(main
     pico_stdlib
     hardware_pio
 )
 
-# Create map/bin/hex/uf2 file outputs
+
+# 7. Outputs (.uf2, .elf, etc.)
 pico_add_extra_outputs(main)
