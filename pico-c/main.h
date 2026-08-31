@@ -6,8 +6,11 @@ void init_32bit_cycle_counter();
 int laser_gate();
 void laser_init(void);
 void laser_onoff(int laser_01);
+void motor_start_homing(void);
+void motor_set_steps(int steps);
+void motor_stop(void);
+void motor_tick(void);
 void motor_init(void);
-void motor_step(int steps);
 #define INTERFACE 0
 #define EXPORT_INTERFACE 0
 #define LOCAL_INTERFACE 0

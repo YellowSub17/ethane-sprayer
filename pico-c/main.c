@@ -4,53 +4,54 @@
 #include <string.h>
 #include <stdlib.h>
 
+static bool read_line(char *buffer, size_t max_len) {
+    static size_t idx = 0;
+    int c = getchar_timeout_us(0);
 
+    while (c != PICO_ERROR_TIMEOUT) {
+        if (c == '\r' || c == '\n') {
+            if (idx > 0) {
+                buffer[idx] = '\0';
+                idx = 0;
+                return true;
+            }
+        } else if (idx < max_len - 1) {
+            buffer[idx++] = (char)c;
+        }
+        c = getchar_timeout_us(0);
+    }
+    return false;
+}
 
 int main() {
     stdio_init_all();
+    motor_init();
+    laser_init();
 
     char buffer[64];
-    int step_count = 0;
-    int laser_01 = 0;
+    int val = 0;
 
     while (true) {
-
-
-        if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-            buffer[strcspn(buffer, "\r\n")] = 0;
-
-             printf("Got transmission: %s\n", buffer);
-
-            // Parse 'STEPS=' followed by an integer (positive or negative)
-            if (sscanf(buffer, "STEPS=%d", &step_count) == 1) {
-                printf("Stepping motor %d steps...\n", step_count);
-                motor_step(step_count);
-                printf("Done.\n");
-
-            } else if (sscanf(buffer, "LASER=%d", &laser_01) == 1) {
-
-                printf("Setting laser to %d...\n", laser_01);
-                laser_onoff(laser_01);
-                printf("Done.\n");
-
-
-
-            }else {
-                printf("Unknown command: %s\n", buffer);
+        // Service serial commands non-blockingly
+        if (read_line(buffer, sizeof(buffer))) {
+            if (strcmp(buffer, "HOME") == 0) {
+                motor_start_homing();
+            }
+            else if (sscanf(buffer, "STEPS=%d", &val) == 1) {
+                motor_set_steps(val);
+            }
+            else if (sscanf(buffer, "LASER=%d", &val) == 1) {
+                laser_onoff(val);
+                printf("Laser toggled: %d\n", val);
+            }
+            else if (strcmp(buffer, "STOP") == 0) {
+                motor_stop();
             }
         }
 
-
-        /*motor_step(200);*/
-        /*sleep_ms(1000);*/
-        /*motor_step(-100);*/
-        /*sleep_ms(1000);*/
-
-
-        blink_led(2);
-
+        // Service motor hardware tick
+        motor_tick();
     }
+
     return 0;
 }
-
-

@@ -13,6 +13,10 @@
 #define PIN_MOTOR_STEP      16
 #define PIN_MOTOR_DIR       17
 
+#define PIN_MOTOR_POT       18 //positive over travel switch
+#define PIN_MOTOR_NOT       19 //negative over travel switch
+
+
 // --- System & Diagnostics ---
 #define PIN_PICO_LED      25
 
