@@ -35,7 +35,7 @@ int main() {
         // Service serial commands non-blockingly
         if (read_line(buffer, sizeof(buffer))) {
             if (strcmp(buffer, "HOME") == 0) {
-                motor_start_homing();
+                motor_start_homing_NOT();
             }
             else if (sscanf(buffer, "STEPS=%d", &val) == 1) {
                 motor_set_steps(val);
@@ -48,10 +48,8 @@ int main() {
                 motor_stop();
             }
         }
-
         // Service motor hardware tick
         motor_tick();
     }
-
     return 0;
 }
