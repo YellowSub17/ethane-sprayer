@@ -6,8 +6,7 @@
 #include "hardware/structs/scb.h"
 #include "laser_timer.pio.h"
 
-#define GATE_A_PIN 13
-#define GATE_B_PIN 14
+#include "pins.h"
 
 static volatile uint32_t systick_overflows = 0;
 
@@ -55,19 +54,19 @@ int laser_gate() {
 
     PIO pio = pio0;
 
-    pio_gpio_init(pio, GATE_A_PIN);
-    pio_gpio_init(pio, GATE_B_PIN);
+    pio_gpio_init(pio, PIN_PHOTO_DIODE_1);
+    pio_gpio_init(pio, PIN_PHOTO_DIODE_2);
 
     uint offset = pio_add_program(pio, &laser_gate_program);
 
     // Setup SM0 for Gate A (GPIO 13)
     pio_sm_config c0 = laser_gate_program_get_default_config(offset);
-    sm_config_set_in_pins(&c0, GATE_A_PIN);
+    sm_config_set_in_pins(&c0, PIN_PHOTO_DIODE_1);
     pio_sm_init(pio, 0, offset, &c0);
 
     // Setup SM1 for Gate B (GPIO 14)
     pio_sm_config c1 = laser_gate_program_get_default_config(offset);
-    sm_config_set_in_pins(&c1, GATE_B_PIN);
+    sm_config_set_in_pins(&c1, PIN_PHOTO_DIODE_2);
     pio_sm_init(pio, 1, offset, &c1);
 
     // Enable both SMs concurrently

@@ -1,4 +1,4 @@
-#include "motor.h"
+#include "pins.h"
 #include "pico/stdlib.h"
 
 // Adjust pin numbers to match your wiring
