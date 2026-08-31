@@ -26,7 +26,7 @@ build-mac: headers
 
 build-pi: headers
 	@echo "Building src..."
-	@cmake -B $(BUILD_DIR) -S . -DPICO_SDK_PATH=$(PICO_SDK_PATH)
+	@cmake -B $(BUILD_DIR) -S . -DPICO_SDK_PATH=$(PICO_SDK_PATH) -DPICOTOOL_FORCE_FETCH_FROM_GIT=1
 	@cmake --build $(BUILD_DIR) -j$(JOBS)
 
 clean:

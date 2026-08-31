@@ -4,11 +4,8 @@
 
 
 
-void hello_world(void){
-    printf("xxxxxxxx");
-}
 
-void blink_led(void) {
+void blink_led(int n) {
     // static flag ensures pin init runs only once
     static bool initialized = false;
     if (!initialized) {
@@ -17,7 +14,7 @@ void blink_led(void) {
         initialized = true;
     }
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < n; i++) {
         gpio_put(PIN_PICO_LED, 1);
         sleep_ms(250);
         gpio_put(PIN_PICO_LED, 0);

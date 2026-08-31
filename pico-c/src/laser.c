@@ -103,3 +103,25 @@ int laser_gate() {
         }
     }
 }
+
+
+void laser_init(void){
+    gpio_init(PIN_LASER_ENABLE);
+    gpio_set_dir(PIN_LASER_ENABLE, GPIO_OUT);
+    gpio_put(PIN_MOTOR_STEP, 0);
+
+}
+
+void laser_onoff(int laser_01){
+    static bool initialized = false;
+    if (!initialized) {
+        laser_init();
+        initialized = true;
+    }
+
+    gpio_put(PIN_LASER_ENABLE, laser_01);
+    sleep_us(5);
+
+
+
+}
