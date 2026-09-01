@@ -82,17 +82,20 @@ int main() {
 
             // Calculate signed difference (handling 24-bit SysTick down-counter wrap)
             int32_t diff = (int32_t)tick_a - (int32_t)tick_b;
+            printf("%d\n", diff);
+            stdio_flush();
 
             // Handle 24-bit down-counter wrap-around
-            if (diff > 0x7FFFFF)  diff -= 0x1000000;
-            if (diff < -0x7FFFFF) diff += 0x1000000;
+            /*if (diff > 0x7FFFFF)  diff -= 0x1000000;*/
+            /*if (diff < -0x7FFFFF) diff += 0x1000000;*/
 
             // Positive diff = Gate A tripped FIRST
             // Negative diff = Gate B tripped FIRST
-            double ns_delta = diff * 8.0;
+            /*double ns_delta = diff * 8.0;*/
 
-            printf("A-to-B Delta: %d cycles\t%.2f ns\t(%.3f us)\n",
-                   diff, ns_delta, ns_delta / 1000.0);
+            /*printf("A-to-B Delta: %d cycles\t%.2f ns\t(%.3f us)\n",*/
+                   /*diff, ns_delta, ns_delta / 1000.0);*/
+
 
             gate_a_hit = false;
             gate_b_hit = false;
