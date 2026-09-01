@@ -42,45 +42,57 @@ int main() {
     PIO pio = pio0;
     uint offset = pio_add_program(pio, &laser_gate_program);
 
-    // Setup SM0 (Gate A)
+    // Force input pins to pull-up so floating pins sit at 3.3V
+    gpio_pull_up(GATE_A_PIN);
+    gpio_pull_up(GATE_B_PIN);
+
+// Setup SM0 (Gate A)
     pio_gpio_init(pio, GATE_A_PIN);
-    pio_sm_set_consecutive_pindirs(pio, 0, GATE_A_PIN, 1, false); // Set as INPUT
+    pio_sm_set_consecutive_pindirs(pio, 0, GATE_A_PIN, 1, false);
     pio_sm_config c0 = laser_gate_program_get_default_config(offset);
     sm_config_set_in_pins(&c0, GATE_A_PIN);
     pio_sm_init(pio, 0, offset, &c0);
 
     // Setup SM1 (Gate B)
     pio_gpio_init(pio, GATE_B_PIN);
-    pio_sm_set_consecutive_pindirs(pio, 1, GATE_B_PIN, 1, false); // Set as INPUT
+    pio_sm_set_consecutive_pindirs(pio, 1, GATE_B_PIN, 1, false);
     pio_sm_config c1 = laser_gate_program_get_default_config(offset);
     sm_config_set_in_pins(&c1, GATE_B_PIN);
     pio_sm_init(pio, 1, offset, &c1);
 
-    // Enable RX FIFO Interrupts on PIO0
+    // Enable RX FIFO Interrupts
     pio_set_irq0_source_enabled(pio, pis_sm0_rx_fifo_not_empty, true);
     pio_set_irq0_source_enabled(pio, pis_sm1_rx_fifo_not_empty, true);
     irq_set_exclusive_handler(PIO0_IRQ_0, pio_irq_handler);
     irq_set_enabled(PIO0_IRQ_0, true);
 
-    // Synchronously start both SMs
-    // 1. Drain any stale garbage in FIFOs
+    // Start State Machines synchronously while pulse generator is OFF
+    pio_enable_sm_mask_in_sync(pio, (1u << 0) | (1u << 1));
+
+    // Clear any startup edge noise
+    sleep_ms(10);
     pio_sm_clear_fifos(pio, 0);
     pio_sm_clear_fifos(pio, 1);
 
-    // 2. Restart internal clock dividers & state machine execution state
-    pio_enable_sm_mask_in_sync(pio, (1u << 0) | (1u << 1));
 
-    // 3. Enable SMs together synchronously
-    pio_set_sm_mask_enabled(pio, (1u << 0) | (1u << 1), true);
+
 
     while (1) {
         if (gate_a_hit && gate_b_hit) {
-            // SysTick counts DOWN: delta = tick_a - tick_b
-            uint32_t cycle_delta = (tick_a - tick_b) & 0x00FFFFFF;
 
-            double ns_delta = cycle_delta * 8.0;
-            printf("Flight Delta: %u cycles | %.2f ns (%.3f us)\n",
-                   cycle_delta, ns_delta, ns_delta / 1000.0);
+            // Calculate signed difference (handling 24-bit SysTick down-counter wrap)
+            int32_t diff = (int32_t)tick_a - (int32_t)tick_b;
+
+            // Handle 24-bit down-counter wrap-around
+            if (diff > 0x7FFFFF)  diff -= 0x1000000;
+            if (diff < -0x7FFFFF) diff += 0x1000000;
+
+            // Positive diff = Gate A tripped FIRST
+            // Negative diff = Gate B tripped FIRST
+            double ns_delta = diff * 8.0;
+
+            printf("A-to-B Delta: %d cycles\t%.2f ns\t(%.3f us)\n",
+                   diff, ns_delta, ns_delta / 1000.0);
 
             gate_a_hit = false;
             gate_b_hit = false;
