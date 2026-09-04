@@ -1,7 +1,5 @@
 #pragma once
 #include "src/pins.h"
-void pio_irq_handler();
-void init_cycle_counter();
 void blink_led(int n);
 void __not_in_flash_func(systick_isr)();
 void init_32bit_cycle_counter();
