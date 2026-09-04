@@ -105,3 +105,66 @@ class NetworkClient:
             except Exception:
                 self.connected = False
                 break
+
+
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="TCP/UART Bridge Server for Ethane Sprayer")
+    parser.add_argument("HOST", nargs="?", default='ethanesprayer.local', type=str)
+    parser.add_argument("PORT", nargs="?", default=5001, type=int)
+    parser.add_argument("COMMAND", nargs="?", default='LASER=1', type=str)
+    args = parser.parse_args()
+
+    # Instantiate the client
+    client = NetworkClient()
+
+    # 1. Initiate connection
+    # host = "ethanesprayer.local"  # Or your Pi's IP address
+    # port = 5001
+
+    print(f"Connecting to {args.HOST}:{args.PORT}...")
+    client.connect(args.HOST, args.PORT)
+
+    # Wait briefly for connection worker thread to establish socket
+    time.sleep(0.5)
+
+    if not client.connected:
+        print("Failed to establish connection. Checking event queue:")
+        event = client.get_event()
+        if event:
+            print(f"  {event}")
+        return
+
+    # 2. Send command
+    print(f"Sending command: '{args.COMMAND}'")
+    client.send_command(args.COMMAND)
+
+    # 3. Wait for response (polling the RX queue with a timeout)
+    timeout_seconds = 5.0
+    start_time = time.time()
+    response_received = False
+
+    print("Waiting for response from Pico...")
+    while time.time() - start_time < timeout_seconds:
+        event = client.get_event()
+        if event:
+            print(f"Received Event: {event}")
+
+            # Check if this event contains a response from the Pico
+            if "[RX]" in event:
+                response_received = True
+                break
+
+        time.sleep(0.05)  # Avoid tight spinning CPU loop
+
+    if not response_received:
+        print("Timed out waiting for response.")
+
+    # 4. Clean up connection
+    print("Disconnecting...")
+    client.disconnect()
+    print("Done.")
+
