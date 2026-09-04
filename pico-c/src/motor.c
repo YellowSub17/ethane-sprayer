@@ -68,7 +68,7 @@ void motor_tick(void) {
 
     if (current_state == STATE_HOMING_NOT) {
         // Read active-low NOT homing switch
-        if (gpio_get(PIN_MOTOR_NOT) == 1) {
+        if (gpio_get(PIN_MOTOR_NOT) == 0) {
             absolute_position = 0;
             target_steps = DRIVER_MSTEP * 2;
             current_state = STATE_HOMING_POT;
@@ -88,7 +88,7 @@ void motor_tick(void) {
 
     if (current_state == STATE_HOMING_POT) {
         // Read active-low POT homing switch
-        if (gpio_get(PIN_MOTOR_POT) == 1) {
+        if (gpio_get(PIN_MOTOR_POT) == 0) {
             target_steps = 0;
             current_state = STATE_IDLE;
             zpositive_limit = absolute_position;
