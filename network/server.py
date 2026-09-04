@@ -79,7 +79,7 @@ class NetworkServer:
                     try:
                         data = sock.recv(1024)
                         if not data:
-                            print("Laptop disconnected.")
+                            print("Client disconnected.")
                             break
 
                         buffer += data.decode('utf-8', errors='ignore')
@@ -92,6 +92,11 @@ class NetworkServer:
                                 # Send command down to Pico over serial
                                 if not self.debug and self.pico:
                                     self.pico.write(f"{command}\n".encode('utf-8'))
+
+                                time.sleep(1)
+                                self.send('[RX] Hello there!')
+
+
                     except Exception as e:
                         print(f"TCP error: {e}")
                         break
@@ -106,7 +111,7 @@ class NetworkServer:
                     response = self.pico.readline().decode('utf-8', errors='ignore').strip()
                     if response:
                         print(f"[Server Sending]: {response}")
-                        self.send_to_laptop(response)
+                        self.send(response)
             except Exception as e:
                 print(f"UART error: {e}")
 

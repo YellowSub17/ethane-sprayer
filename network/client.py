@@ -136,7 +136,7 @@ if __name__ == "__main__":
         event = client.get_event()
         if event:
             print(f"  {event}")
-        return
+        exit()
 
     # 2. Send command
     print(f"Sending command: '{args.COMMAND}'")
