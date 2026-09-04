@@ -128,10 +128,10 @@ if __name__ == "__main__":
     time.sleep(2)
 
     if not client.connected:
-        print("Failed to establish connection. Checking event queue:")
-        event = client.get_event()
-        if event:
-            print(f"  {event}")
+        print("Failed to establish connection. Checking response queue:")
+        response = client.get_response()
+        if response:
+            print(f"  {response}")
         exit()
 
     # 2. Send command
@@ -150,7 +150,7 @@ if __name__ == "__main__":
             print(f"Received Response: {response}")
 
             # Check if this event contains a response from the Pico
-            if "[RX]" in event:
+            if "[RX]" in response:
                 response_received = True
                 break
 
