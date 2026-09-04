@@ -51,6 +51,8 @@ class EthaneControlApp(tk.Tk):
         header.pack(fill="x", padx=22, pady=(18, 12))
         ttk.Label(header, text="ETHANE SPRAYER", style="Title.TLabel").pack(side="left")
 
+
+
     def _build_body(self) -> None:
         body = ttk.Frame(self)
         body.pack(fill="both", expand=True, padx=22)
@@ -69,6 +71,9 @@ class EthaneControlApp(tk.Tk):
         ttk.Label(body_right, text="EVENT LOG", foreground=MUTED).grid(
             row=11, column=0, sticky="w"
         )
+        ttk.Button(body_right, text="Clear Log", command = self._clear_log).grid(
+            row=11, column=1, sticky="e"
+                )
         self.log = tk.Text(
             body_right,
             height=10,
@@ -81,6 +86,13 @@ class EthaneControlApp(tk.Tk):
         )
         self.log.grid(row=12, column=0, columnspan=3, sticky="nsew", pady=(7, 0))
         body_right.rowconfigure(12, weight=1)
+
+
+        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.send_tcp_msg('LASER=1')).grid(row=0, column=0)
+        # laser1 = tkk.Button(command=lambda: self.send_tcp_msg('LASER=1')
+
+
+
 
     def _build_footer(self) -> None:
         footer = ttk.Frame(self)
@@ -113,6 +125,11 @@ class EthaneControlApp(tk.Tk):
         self.log.insert(tk.END, '\n')
         self.log.configure(state='disabled')
 
+    def _clear_log(self,) -> None:
+        self.log.configure(state='normal')
+        self.log.delete(1.0, tk.END)
+        self.log.configure(state='disabled')
+
 
     def send_tcp_msg(self, msg: str ):
 
@@ -130,7 +147,6 @@ class EthaneControlApp(tk.Tk):
                 s.sendall(msg.encode("utf-8"))
                 self._log(f'Sent TCP message to {self.host}:{self.port}')
                 self._log(f'Message: "{msg}"')
-
 
 
         except Exception as e:
