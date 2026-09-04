@@ -43,7 +43,7 @@ class NetworkClient:
             cmd += '\n'
         self.tx_queue.put(cmd)
 
-    def get_event(self):
+    def get_response(self):
         """GUI calls this to retrieve incoming responses (returns None if empty)."""
         try:
             return self.rx_queue.get_nowait()
@@ -60,7 +60,7 @@ class NetworkClient:
             self.socket.settimeout(None)  # Switch back to blocking mode
 
             self.connected = True
-            self.rx_queue.put(f"[SYS] Connected to {self.host}:{self.port}")
+            self.rx_queue.put(f"[Client SYS] Connected to {self.host}:{self.port}")
 
             # Launch dedicated sender and receiver threads
             threading.Thread(target=self._tx_worker, daemon=True).start()
@@ -78,11 +78,11 @@ class NetworkClient:
                 cmd = self.tx_queue.get(timeout=1.0)
                 if self.socket and self.connected:
                     self.socket.sendall(cmd.encode('utf-8'))
-                    self.rx_queue.put(f"[TX] {cmd.strip()}")
+                    self.rx_queue.put(f"[Client Sent] {cmd.strip()}")
             except queue.Empty:
                 continue
             except Exception as e:
-                self.rx_queue.put(f"[ERR] Send failed: {e}")
+                self.rx_queue.put(f"[Client ERR] Send failed: {e}")
                 self.connected = False
                 break
 
@@ -93,7 +93,7 @@ class NetworkClient:
             try:
                 data = self.socket.recv(1024)
                 if not data:
-                    self.rx_queue.put("[SYS] Server closed connection.")
+                    self.rx_queue.put("[Client SYS] Server closed connection.")
                     self.connected = False
                     break
 
@@ -121,15 +121,11 @@ if __name__ == "__main__":
     # Instantiate the client
     client = NetworkClient()
 
-    # 1. Initiate connection
-    # host = "ethanesprayer.local"  # Or your Pi's IP address
-    # port = 5001
-
     print(f"Connecting to {args.HOST}:{args.PORT}...")
     client.connect(args.HOST, args.PORT)
 
     # Wait briefly for connection worker thread to establish socket
-    time.sleep(0.5)
+    time.sleep(2)
 
     if not client.connected:
         print("Failed to establish connection. Checking event queue:")
@@ -149,9 +145,9 @@ if __name__ == "__main__":
 
     print("Waiting for response from Pico...")
     while time.time() - start_time < timeout_seconds:
-        event = client.get_event()
-        if event:
-            print(f"Received Event: {event}")
+        response = client.get_response()
+        if response:
+            print(f"Received Response: {response}")
 
             # Check if this event contains a response from the Pico
             if "[RX]" in event:

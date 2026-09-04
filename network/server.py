@@ -94,7 +94,7 @@ class NetworkServer:
                                     self.pico.write(f"{command}\n".encode('utf-8'))
 
                                 time.sleep(1)
-                                self.send('Hello there!')
+                                self.send('Hello there! I am the server, I got your message, and this is my response I am sending.')
 
 
                     except Exception as e:
