@@ -6,8 +6,11 @@ from tkinter import messagebox, ttk
 
 from .model import ExperimentConfig, SIMULATION_SEQUENCE, ShotState, SEQUENCE_TT
 from .network import NetworkWindow
-from .color_scheme import *
-from .jetspeed import JetSpeedWindow
+# from .color_scheme import *
+
+from .style import *
+from .style import _configure_styles
+# from .jetspeed import JetSpeedWindow
 
 import socket
 
@@ -25,11 +28,12 @@ class EthaneControlApp(tk.Tk):
         self.host: str = 'localhost'
         self.port: int = 5001
 
-        self._configure_styles()
         self._build_header()
         self._build_body()
         self._build_footer()
-        # self.open_jet_speed_window()
+
+        _configure_styles(self)
+
         self.open_network_window()
 
 
@@ -97,17 +101,17 @@ class EthaneControlApp(tk.Tk):
     def _build_footer(self) -> None:
         footer = ttk.Frame(self)
         footer.pack(fill="x", padx=22, pady=16)
-        ttk.Button(footer, text="Measure Jet Speed", command=self.open_jet_speed_window).pack(side="left")
+        # ttk.Button(footer, text="Measure Jet Speed", command=self.open_jet_speed_window).pack(side="left")
         ttk.Button(footer, text="Network", command=self.open_network_window).pack(side='left')
 
 
 
-    def open_jet_speed_window(self) -> None:
-        if self.jet_speed_window is not None and self.jet_speed_window.winfo_exists():
-            self.jet_speed_window.lift()
-            self.jet_speed_window.focus_force()
-            return
-        self.jet_speed_window = JetSpeedWindow(self)
+    # def open_jet_speed_window(self) -> None:
+        # if self.jet_speed_window is not None and self.jet_speed_window.winfo_exists():
+            # self.jet_speed_window.lift()
+            # self.jet_speed_window.focus_force()
+            # return
+        # self.jet_speed_window = JetSpeedWindow(self)
 
 
 

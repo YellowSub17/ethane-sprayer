@@ -1,7 +1,7 @@
 
 import tkinter as tk
 from tkinter import ttk
-from .color_scheme import *
+from .style import *
 
 
 

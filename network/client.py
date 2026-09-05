@@ -3,6 +3,20 @@ import threading
 import queue
 import time
 
+import builtins
+from datetime import datetime
+
+# Save the original print function
+_original_print = builtins.print
+
+def timestamped_print(*args, **kwargs):
+    # Format current time (e.g., 2026-09-05 17:06:42.123)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    _original_print(f"[{now}]", *args, **kwargs)
+
+# Override built-in print globally for this file
+print = timestamped_print
+
 class NetworkClient:
     def __init__(self):
         self.host = None
@@ -55,12 +69,16 @@ class NetworkClient:
     def _connection_worker(self):
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.settimeout(3.0)
+            self.socket.settimeout(3) #how long to wait trying to connect
             self.socket.connect((self.host, self.port))
             self.socket.settimeout(None)  # Switch back to blocking mode
 
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
             self.connected = True
-            self.rx_queue.put(f"[Client SYS] Connected to {self.host}:{self.port}")
+
+            print(f"[CLIENT] Connected to {self.host}:{self.port}")
+            # self.rx_queue.put(f"Connected to {self.host}:{self.port}")
 
             # Launch dedicated sender and receiver threads
             threading.Thread(target=self._tx_worker, daemon=True).start()
@@ -68,7 +86,9 @@ class NetworkClient:
 
         except Exception as e:
             self.connected = False
-            self.rx_queue.put(f"[ERR] Failed to connect: {e}")
+
+            print(f"[CLIENT] Failed to connect: {e}")
+            # self.rx_queue.put(f"[CLIENT] Failed to connect: {e}")
 
     def _tx_worker(self):
         """Monitors tx_queue and writes commands to the socket."""
@@ -78,7 +98,7 @@ class NetworkClient:
                 cmd = self.tx_queue.get(timeout=1.0)
                 if self.socket and self.connected:
                     self.socket.sendall(cmd.encode('utf-8'))
-                    self.rx_queue.put(f"[Client Sent] {cmd.strip()}")
+                    self.rx_queue.put(f"[TX] {cmd.strip()}")
             except queue.Empty:
                 continue
             except Exception as e:
@@ -93,7 +113,7 @@ class NetworkClient:
             try:
                 data = self.socket.recv(1024)
                 if not data:
-                    self.rx_queue.put("[Client SYS] Server closed connection.")
+                    self.rx_queue.put("Server closed connection.")
                     self.connected = False
                     break
 
@@ -106,61 +126,64 @@ class NetworkClient:
                 self.connected = False
                 break
 
-
-
-
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="TCP/UART Bridge Server for Ethane Sprayer")
-    parser.add_argument("HOST", nargs="?", default='ethanesprayer.local', type=str)
+    parser = argparse.ArgumentParser(description="Test NetworkClient Connection")
+    parser.add_argument("HOST", nargs="?", default='localhost', type=str)
     parser.add_argument("PORT", nargs="?", default=5001, type=int)
-    parser.add_argument("COMMAND", nargs="?", default='LASER=1', type=str)
     args = parser.parse_args()
 
-    # Instantiate the client
     client = NetworkClient()
-
-    print(f"Connecting to {args.HOST}:{args.PORT}...")
     client.connect(args.HOST, args.PORT)
+    print(f"[CLIENT] Starting background client for {args.HOST}:{args.PORT}")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        client.disconnect()
 
-    # Wait briefly for connection worker thread to establish socket
-    time.sleep(2)
 
-    if not client.connected:
-        print("Failed to establish connection. Checking response queue:")
-        response = client.get_response()
-        if response:
-            print(f"  {response}")
-        exit()
+# if __name__ == "__main__":
+    # import argparse
 
-    # 2. Send command
-    print(f"Sending command: '{args.COMMAND}'")
-    client.send_command(args.COMMAND)
+    # parser = argparse.ArgumentParser(description="TCP/UART Bridge Server for Ethane Sprayer")
+    # parser.add_argument("HOST", nargs="?", default='ethanesprayer.local', type=str)
+    # parser.add_argument("PORT", nargs="?", default=5001, type=int)
+    # parser.add_argument("COMMAND", nargs="?", default='LASER=1', type=str)
+    # args = parser.parse_args()
 
-    # 3. Wait for response (polling the RX queue with a timeout)
-    timeout_seconds = 5.0
-    start_time = time.time()
-    response_received = False
+    # # Instantiate the client
+    # client = NetworkClient()
 
-    print("Waiting for response from Pico...")
-    while time.time() - start_time < timeout_seconds:
-        response = client.get_response()
-        if response:
-            print(f"Received Response: {response}")
+    # print(f"[CLIENT] Connecting to {args.HOST}:{args.PORT}...")
+    # client.connect(args.HOST, args.PORT)
 
-            # Check if this event contains a response from the Pico
-            if "[RX]" in response:
-                response_received = True
-                break
+    # # Wait briefly for connection worker thread to establish socket
+    # time.sleep(2)
 
-        time.sleep(0.05)  # Avoid tight spinning CPU loop
+    # if not client.connected:
+        # print("[CLIENT] Failed to establish connection. Checking response queue:")
+        # response = client.get_response()
+        # if response:
+            # print(f"[CLIENT] Got response: {response}")
 
-    if not response_received:
-        print("Timed out waiting for response.")
+        # exit()
 
-    # 4. Clean up connection
-    print("Disconnecting...")
-    client.disconnect()
-    print("Done.")
+    # # 2. Send command
+    # print(f"[CLIENT] Sending command: '{args.COMMAND}'")
+    # client.send_command(args.COMMAND)
+
+    # # 3. Wait for response (polling the RX queue with a timeout)
+    # timeout_seconds = 5.0
+    # start_time = time.time()
+    # response_received = False
+
+    # print("[CLIENT] Waiting for response from server...")
+    # while time.time() - start_time < timeout_seconds:
+        # response = client.get_response()
+        # if response:
+            # print(f"[CLIENT] Got response: {response}")
+
+
 
