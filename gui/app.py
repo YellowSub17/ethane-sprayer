@@ -3,7 +3,6 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from .model import ExperimentConfig, SIMULATION_SEQUENCE, ShotState, SEQUENCE_TT
 from .network import NetworkWindow
 # from .color_scheme import *
 
@@ -26,8 +25,8 @@ class EthaneControlApp(tk.Tk):
         self.network_window= None
         self.network_client = None
 
-        self.host: str = 'localhost'
-        self.port: int = 5001
+        self.host = 'localhost'
+        self.port = 5001
 
         self._build_header()
         self._build_body()
@@ -35,7 +34,7 @@ class EthaneControlApp(tk.Tk):
 
         _configure_styles(self)
 
-        # self.open_network_window()
+        self.open_network_window()
 
 
     def _build_header(self) -> None:
@@ -57,7 +56,7 @@ class EthaneControlApp(tk.Tk):
         body_left.columnconfigure(0, weight=1)
         body_left.rowconfigure(2, weight=1)
 
-        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.send_tcp_msg('LASER=1')).grid(row=0, column=0)
+        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.network_client.send_command('LASER=1')).grid(row=0, column=0)
 
         body_right = ttk.Frame(body, style="Panel.TFrame", padding=18)
         body_right.grid(row=0, column=1, sticky="nsew", padx=(7, 0))
@@ -96,7 +95,6 @@ class EthaneControlApp(tk.Tk):
 
 
 
-
     def open_network_window(self) -> None:
         if self.network_window is not None and self.network_window.winfo_exists():
             self.network_window.lift()
@@ -130,27 +128,27 @@ class EthaneControlApp(tk.Tk):
         self.log.configure(state='disabled')
 
 
-    def send_tcp_msg(self, msg: str ):
+    # def send_tcp_msg(self, msg: str ):
 
-        """Connects to the TCP server, sends the message, and closes the connection."""
-        ## need to add \n to the end of the msg
+        # """Connects to the TCP server, sends the message, and closes the connection."""
+        # ## need to add \n to the end of the msg
 
-        try:
-            # Create a TCP/IP socket
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                # Set a timeout so the UI doesn't freeze indefinitely if the port is unreachable
-                s.settimeout(2.0)
-                s.connect((self.host, self.port))
+        # try:
+            # # Create a TCP/IP socket
+            # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                # # Set a timeout so the UI doesn't freeze indefinitely if the port is unreachable
+                # s.settimeout(2.0)
+                # s.connect((self.host, self.port))
 
-                # Strings must be encoded to bytes before sending over socket
-                s.sendall(msg.encode("utf-8"))
-                self._log(f'Sent TCP message to {self.host}:{self.port}')
-                self._log(f'Message: "{msg}"')
+                # # Strings must be encoded to bytes before sending over socket
+                # s.sendall(msg.encode("utf-8"))
+                # self._log(f'Sent TCP message to {self.host}:{self.port}')
+                # self._log(f'Message: "{msg}"')
 
 
-        except Exception as e:
-            self._log(f"Failed to send TCP message to {self.host}:{self.port}")
-            self._log(f'Message: "{msg}"')
+        # except Exception as e:
+            # self._log(f"Failed to send TCP message to {self.host}:{self.port}")
+            # self._log(f'Message: "{msg}"')
 
 
 

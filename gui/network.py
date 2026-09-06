@@ -64,9 +64,13 @@ class NetworkWindow(tk.Toplevel):
 
     def connect(self):
 
+        host = self.host_entry.get()
+        port = self.port_entry.get()
+
+
         if self.parent.network_client is None:
             self.parent.network_client = NetworkClient()
-            self.parent.network_client.connect('localhost', 5001)
+            self.parent.network_client.connect(host, port)
             self.parent.process_rx_queue()
 
         else:
