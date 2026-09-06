@@ -2,6 +2,9 @@
 import tkinter as tk
 from tkinter import ttk
 from .style import *
+from network.client import NetworkClient
+
+
 
 
 
@@ -50,19 +53,41 @@ class NetworkWindow(tk.Toplevel):
         connect_button = ttk.Button(footer, text='Connect', command=self.connect)
         connect_button.grid(row=0,column=0)
 
+        disconnect_button = ttk.Button(footer, text='Disconnect', command=self.disconnect)
+        disconnect_button.grid(row=0,column=1)
+
+        disconnect_button = ttk.Button(footer, text='Ping Server', command=self.ping_server)
+        disconnect_button.grid(row=0,column=2)
+
+    def ping_server(self):
+        self.parent.network_client.send_command('PINGping!~')
+
     def connect(self):
-        host_raw = self.host_entry.get().strip()
-        port_raw = self.port_entry.get().strip()
 
-        try:
-            port = int(port_raw)
-            self.parent.host = host_raw
-            self.parent.port = port
-            self.parent._log(f'Host and port set to {host_raw}:{port}')
+        if self.parent.network_client is None:
+            self.parent.network_client = NetworkClient()
+            self.parent.network_client.connect('localhost', 5001)
+            self.parent.process_rx_queue()
 
-        except ValueError:
-            port = -1
-            self.parent._log(f'Error: invalid port {port}')
+        else:
+            self.partent.network_client.disconnect()
+            self.connect()
+
+
+    def disconnect(self):
+        pass
+        # host_raw = self.host_entry.get().strip()
+        # port_raw = self.port_entry.get().strip()
+
+        # try:
+            # port = int(port_raw)
+            # self.parent.host = host_raw
+            # self.parent.port = port
+            # self.parent._log(f'Host and port set to {host_raw}:{port}')
+
+        # except ValueError:
+            # port = -1
+            # self.parent._log(f'Error: invalid port {port}')
 
 
 

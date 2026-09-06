@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import time
 import tkinter as tk
@@ -13,6 +12,7 @@ from .style import _configure_styles
 # from .jetspeed import JetSpeedWindow
 
 import socket
+import queue
 
 
 
@@ -23,8 +23,9 @@ class EthaneControlApp(tk.Tk):
         self.geometry("1120x720")
         self.minsize(980, 640)
         self.configure(bg=BG)
-        self.network_window: NetworkWindow | None = None
-        self.jet_speed_window: JetSpeedWindow | None = None
+        self.network_window= None
+        self.network_client = None
+
         self.host: str = 'localhost'
         self.port: int = 5001
 
@@ -34,21 +35,8 @@ class EthaneControlApp(tk.Tk):
 
         _configure_styles(self)
 
-        self.open_network_window()
+        # self.open_network_window()
 
-
-
-    def _configure_styles(self) -> None:
-        style = ttk.Style(self)
-        style.theme_use("clam")
-        style.configure("TFrame", background=BG)
-        style.configure("Panel.TFrame", background=PANEL)
-        style.configure("TLabel", background=PANEL, foreground=TEXT, font=("Arial", 10))
-        style.configure("Title.TLabel", background=BG, foreground=TEXT, font=("Arial", 22, "bold"))
-        style.configure("Sub.TLabel", background=BG, foreground=MUTED, font=("Arial", 10))
-        style.configure("Status.TLabel", background=PANEL, foreground=CYAN, font=("Arial", 20, "bold"))
-        style.configure("TEntry", fieldbackground="#22333f", foreground=TEXT, insertcolor=TEXT)
-        style.configure("Start.TButton", font=("Arial", 12, "bold"), padding=10)
 
     def _build_header(self) -> None:
         header = ttk.Frame(self)
@@ -65,12 +53,16 @@ class EthaneControlApp(tk.Tk):
         body.rowconfigure(0, weight=1)
 
         body_left = ttk.Frame(body, style="Panel.TFrame", padding=18)
-        body_right = ttk.Frame(body, style="Panel.TFrame", padding=18)
         body_left.grid(row=0, column=0, sticky="nsew", padx=(0, 7))
-        body_right.grid(row=0, column=1, sticky="nsew", padx=(7, 0))
         body_left.columnconfigure(0, weight=1)
         body_left.rowconfigure(2, weight=1)
+
+        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.send_tcp_msg('LASER=1')).grid(row=0, column=0)
+
+        body_right = ttk.Frame(body, style="Panel.TFrame", padding=18)
+        body_right.grid(row=0, column=1, sticky="nsew", padx=(7, 0))
         body_right.columnconfigure(1, weight=1)
+        body_right.rowconfigure(12, weight=1)
 
         ttk.Label(body_right, text="EVENT LOG", foreground=MUTED).grid(
             row=11, column=0, sticky="w"
@@ -89,10 +81,8 @@ class EthaneControlApp(tk.Tk):
             state="disabled",
         )
         self.log.grid(row=12, column=0, columnspan=3, sticky="nsew", pady=(7, 0))
-        body_right.rowconfigure(12, weight=1)
 
 
-        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.send_tcp_msg('LASER=1')).grid(row=0, column=0)
         # laser1 = tkk.Button(command=lambda: self.send_tcp_msg('LASER=1')
 
 
@@ -106,14 +96,6 @@ class EthaneControlApp(tk.Tk):
 
 
 
-    # def open_jet_speed_window(self) -> None:
-        # if self.jet_speed_window is not None and self.jet_speed_window.winfo_exists():
-            # self.jet_speed_window.lift()
-            # self.jet_speed_window.focus_force()
-            # return
-        # self.jet_speed_window = JetSpeedWindow(self)
-
-
 
     def open_network_window(self) -> None:
         if self.network_window is not None and self.network_window.winfo_exists():
@@ -121,6 +103,19 @@ class EthaneControlApp(tk.Tk):
             self.network_window.focus_force()
             return
         self.network_window = NetworkWindow(self)
+
+    def process_rx_queue(self):
+        """Polls the network client's rx_queue safely on the main UI thread."""
+        try:
+          # Drain all pending messages without blocking the GUI
+          while True:
+            message = self.network_client.rx_queue.get_nowait()
+            self._log(message)
+        except queue.Empty:
+          pass
+
+        # Schedule next check in 100ms
+        self.after(100, self.process_rx_queue)
 
 
     def _log(self, text) -> None:

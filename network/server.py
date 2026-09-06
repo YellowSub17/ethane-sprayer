@@ -109,7 +109,7 @@ class NetworkServer:
                                     self.pico.write(f"{command}\n".encode('utf-8'))
                                 elif self.debug:
 
-                                    time.sleep(10)
+                                    time.sleep(1)
                                     self.send(f'{command[::-1]}')
 
                                 # time.sleep(1)
