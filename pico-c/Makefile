@@ -16,9 +16,12 @@ all: flash
 headers:
 	@echo "#pragma once" > main.h
 	@echo '#include "src/pins.h"' >> main.h
+	@echo '#include "src/aux.h"' >> main.h
 	@makeheaders -h main.c src/*.c >> main.h
 
+
 build-mac: headers
+	@echo "Building headers..."
 	@export PICO_TOOLCHAIN_PATH="/opt/homebrew/opt/arm-none-eabi-gcc@9" && \
 	export PATH="/opt/homebrew/opt/arm-none-eabi-binutils/bin:/opt/homebrew/opt/arm-none-eabi-gcc@9/bin:$(PATH)" && \
 	cmake -B $(BUILD_DIR) -S . && \

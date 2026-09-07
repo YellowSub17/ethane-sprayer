@@ -10,11 +10,18 @@
 
 
 // --- Motor Control Pins ---
-#define PIN_MOTOR_STEP      16
-#define PIN_MOTOR_DIR       17
+#define PIN_MOTOR_STEP         16
+#define PIN_MOTOR_DIR          17
+#define PIN_MOTOR_ENABLE       18
 
-#define PIN_MOTOR_POT       18 //positive over travel switch
-#define PIN_MOTOR_NOT       19 //negative over travel switch
+
+
+#define PIN_MOTOR_POT          19 //positive over travel switch
+#define PIN_MOTOR_NOT          20 //negative over travel switch
+#define PIN_MOTOR_HARDLIMIT    21 //negative over travel switch
+
+
+
 
 
 // --- System & Diagnostics ---

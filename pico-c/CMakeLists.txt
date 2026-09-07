@@ -25,7 +25,11 @@ add_executable(main
     ${SRC_FILES}
 )
 
-target_include_directories(main PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src)
+
+target_include_directories(main PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/src
+)
 
 # 5. PIO Headers
 pico_generate_pio_header(main ${CMAKE_CURRENT_LIST_DIR}/src/laser_timer.pio)
@@ -37,6 +41,7 @@ pico_enable_stdio_uart(main 0)
 target_link_libraries(main
     pico_stdlib
     hardware_pio
+    pico_multicore
 )
 
 

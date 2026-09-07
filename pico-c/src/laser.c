@@ -6,6 +6,7 @@
 #include "hardware/structs/scb.h"
 #include "laser_timer.pio.h"
 
+#include "../main.h"
 #include "pins.h"
 
 static volatile uint32_t systick_overflows = 0;

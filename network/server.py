@@ -23,7 +23,7 @@ class NetworkServer:
         self.serial_port = serial_port
         self.baud = baud
         self.debug = debug
-        self.running = False
+        self.running =False
         self.client_socket = None
 
         # Initialize Serial unless in DEBUG mode
@@ -108,7 +108,6 @@ class NetworkServer:
                                 if not self.debug and self.pico:
                                     self.pico.write(f"{command}\n".encode('utf-8'))
                                 elif self.debug:
-
                                     time.sleep(1)
                                     self.send(f'{command[::-1]}')
 
@@ -133,6 +132,9 @@ class NetworkServer:
                         self.send(response)
             except Exception as e:
                 print(f"UART error: '{e}'")
+                self.stop()
+                time.sleep(2)
+                self.start()
 
             time.sleep(0.01)  # Prevent CPU spinning
 
