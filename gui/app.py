@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from .network import NetworkWindow
+from network.client import NetworkClient
 # from .color_scheme import *
 
 from .style import *
@@ -23,7 +24,7 @@ class EthaneControlApp(tk.Tk):
         self.minsize(980, 640)
         self.configure(bg=BG)
         self.network_window= None
-        self.network_client = None
+        self.network_client = NetworkClient()
 
         self.host = 'localhost'
         self.port = 5001
@@ -42,6 +43,31 @@ class EthaneControlApp(tk.Tk):
         header.pack(fill="x", padx=22, pady=(18, 12))
         ttk.Label(header, text="ETHANE SPRAYER", style="Title.TLabel").pack(side="left")
 
+        # Canvas for the status indicator circle
+        self.status_canvas = tk.Canvas(
+            header,
+            width=16,
+            height=16,
+            highlightthickness=0,
+            bd=0
+        )
+        self.status_canvas.pack(side="left", padx=(10, 0))
+
+        # Draw the initial circle (x1, y1, x2, y2)
+        self.status_indicator = self.status_canvas.create_oval(2, 2, 14, 14, fill="red")
+
+        # Set initial color based on state
+        self._update_connection_status()
+
+    def _update_connection_status(self) -> None:
+        """Updates the indicator circle color based on self.network_client.connected."""
+        color = "green" if self.network_client.connected else "red"
+        self.status_canvas.itemconfig(self.status_indicator, fill=color)
+
+        self.after(500, self._update_connection_status)
+
+
+
 
 
     def _build_body(self) -> None:
@@ -56,7 +82,7 @@ class EthaneControlApp(tk.Tk):
         body_left.columnconfigure(0, weight=1)
         body_left.rowconfigure(2, weight=1)
 
-        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.network_client.send_command('LASER=1')).grid(row=0, column=0)
+        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.network_client.send_message('LASER=1')).grid(row=0, column=0)
 
         body_right = ttk.Frame(body, style="Panel.TFrame", padding=18)
         body_right.grid(row=0, column=1, sticky="nsew", padx=(7, 0))
@@ -72,11 +98,11 @@ class EthaneControlApp(tk.Tk):
         self.log = tk.Text(
             body_right,
             height=10,
-            bg="#0c141a",
-            fg="#bfd0d8",
+            bg=LOG_BG,
+            fg=LOG_FG,
             insertbackground=TEXT,
             relief="flat",
-            font=("DejaVu Sans Mono", 9),
+            font=("Courier", 12),
             state="disabled",
         )
         self.log.grid(row=12, column=0, columnspan=3, sticky="nsew", pady=(7, 0))
@@ -102,19 +128,6 @@ class EthaneControlApp(tk.Tk):
             return
         self.network_window = NetworkWindow(self)
 
-    def process_rx_queue(self):
-        """Polls the network client's rx_queue safely on the main UI thread."""
-        try:
-          # Drain all pending messages without blocking the GUI
-          while True:
-            message = self.network_client.rx_queue.get_nowait()
-            self._log(message)
-        except queue.Empty:
-          pass
-
-        # Schedule next check in 100ms
-        self.after(100, self.process_rx_queue)
-
 
     def _log(self, text) -> None:
         self.log.configure(state='normal')
@@ -127,28 +140,23 @@ class EthaneControlApp(tk.Tk):
         self.log.delete(1.0, tk.END)
         self.log.configure(state='disabled')
 
+    def process_log_queue(self):
+        """Polls the network client's rx_queue safely on the main UI thread."""
+        try:
+          # Drain all pending messages without blocking the GUI
+          while True:
+            message = self.network_client.log_queue.get_nowait()
+            self._log(message)
+        except queue.Empty:
+          pass
 
-    # def send_tcp_msg(self, msg: str ):
-
-        # """Connects to the TCP server, sends the message, and closes the connection."""
-        # ## need to add \n to the end of the msg
-
-        # try:
-            # # Create a TCP/IP socket
-            # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                # # Set a timeout so the UI doesn't freeze indefinitely if the port is unreachable
-                # s.settimeout(2.0)
-                # s.connect((self.host, self.port))
-
-                # # Strings must be encoded to bytes before sending over socket
-                # s.sendall(msg.encode("utf-8"))
-                # self._log(f'Sent TCP message to {self.host}:{self.port}')
-                # self._log(f'Message: "{msg}"')
+        # Schedule next check in 100ms
+        self.after(100, self.process_log_queue)
 
 
-        # except Exception as e:
-            # self._log(f"Failed to send TCP message to {self.host}:{self.port}")
-            # self._log(f'Message: "{msg}"')
+
+
+
 
 
 

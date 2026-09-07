@@ -18,6 +18,11 @@ CYAN = "#35c4d8"
 GREEN = "#47d18c"
 RED = "#ef6461"
 
+
+
+LOG_BG="#0c141a",
+LOG_FG="#bfd0d8",
+
 def _configure_styles(self) -> None:
     style = ttk.Style(self)
     style.theme_use("clam")

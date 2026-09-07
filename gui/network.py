@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import ttk
 from .style import *
 from network.client import NetworkClient
+import queue
+import time
 
 
 
@@ -14,6 +16,9 @@ class NetworkWindow(tk.Toplevel):
     def __init__(self, parent: tk.Misc) -> None:
         super().__init__(parent)
         self.parent = parent
+        self.network_client = self.parent.network_client
+        self._log = self.parent._log
+
         self.title("Ethane Sprayer — Network Configuration")
 
         self.configure(bg=BG)
@@ -60,43 +65,29 @@ class NetworkWindow(tk.Toplevel):
         disconnect_button.grid(row=0,column=2)
 
     def ping_server(self):
-        self.parent.network_client.send_command('PINGping!~')
+        self.network_client.send_message('PINGping!~~')
 
     def connect(self):
 
         host = self.host_entry.get()
         port = self.port_entry.get()
 
+        self.network_client.connect(host, port)
+        self.parent.process_log_queue()
 
-        if self.parent.network_client is None:
-            self.parent.network_client = NetworkClient()
-            self.parent.network_client.connect(host, port)
-            self.parent.process_rx_queue()
 
-        else:
-            self.partent.network_client.disconnect()
-            self.connect()
 
 
     def disconnect(self):
-        pass
-        # host_raw = self.host_entry.get().strip()
-        # port_raw = self.port_entry.get().strip()
 
-        # try:
-            # port = int(port_raw)
-            # self.parent.host = host_raw
-            # self.parent.port = port
-            # self.parent._log(f'Host and port set to {host_raw}:{port}')
+        host = self.network_client.host
+        port = self.network_client.port
 
-        # except ValueError:
-            # port = -1
-            # self.parent._log(f'Error: invalid port {port}')
+        if self.network_client.connected:
+            self.parent.network_client.disconnect()
 
 
-
-
-
+        self.after(200, self.parent._update_connection_status)
 
 
 
