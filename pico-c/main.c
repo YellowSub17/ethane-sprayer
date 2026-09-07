@@ -42,7 +42,6 @@ int main() {
             }
             else if (sscanf(buffer, "LASER=%d", &val) == 1) {
                 laser_onoff(val);
-                printf("Laser toggled: %d\n", val);
             }
             else if (strcmp(buffer, "STOP") == 0) {
                 motor_stop();

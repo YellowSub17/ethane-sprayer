@@ -96,7 +96,7 @@ void motor_tick(void) {
             printf("Negative Limit: %d\n", znegative_limit );
             printf("Positive Limit: %d\n", zpositive_limit );
 
-            motor_set_steps(-zpositive_limit/2);
+            motor_set_steps(zpositive_limit/2);
 
 
             return;

@@ -116,6 +116,12 @@ void laser_onoff(int laser_01){
 
     gpio_put(PIN_LASER_ENABLE, laser_01);
     sleep_us(5);
+    if (laser_01==0){
+        printf("Laser turned off\n");
+    } else {
+        printf("Laser turned on\n");
+    }
+
 
 
 
