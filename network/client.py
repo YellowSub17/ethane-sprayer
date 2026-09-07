@@ -3,19 +3,9 @@ import threading
 import queue
 import time
 
-import builtins
 from datetime import datetime
 
-# Save the original print function
-_original_print = builtins.print
 
-def timestamped_print(*args, **kwargs):
-    # Format current time (e.g., 2026-09-05 17:06:42.123)
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    _original_print(f"[{now}]", *args, **kwargs)
-
-# Override built-in print globally for this file
-print = timestamped_print
 
 class NetworkClient:
     def __init__(self):

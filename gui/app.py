@@ -82,7 +82,20 @@ class EthaneControlApp(tk.Tk):
         body_left.columnconfigure(0, weight=1)
         body_left.rowconfigure(2, weight=1)
 
-        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.network_client.send_message('LASER=1')).grid(row=0, column=0)
+        laser0 = ttk.Button(body_left,text='LASER 0', command=lambda: self.network_client.send_message('LASER=0')).grid(row=0, column=0)
+        laser1 = ttk.Button(body_left,text='LASER 1', command=lambda: self.network_client.send_message('LASER=1')).grid(row=0, column=1)
+
+        steps20 = ttk.Button(body_left,text='STEPS 20', command=lambda: self.network_client.send_message('STEPS=20')).grid(row=1, column=0)
+        steps20 = ttk.Button(body_left,text='STEPS -20', command=lambda: self.network_client.send_message('STEPS=-20')).grid(row=1, column=1)
+
+
+
+        cmd_entry = ttk.Entry(body_left,)
+        cmd_entry.grid(row=2, column=0)
+        cmd_entry.insert(0, 'CMD')
+        send = ttk.Button(body_left,text='SEND', command=lambda: self.network_client.send_message(cmd_entry.get())).grid(row=2, column=1)
+
+
 
         body_right = ttk.Frame(body, style="Panel.TFrame", padding=18)
         body_right.grid(row=0, column=1, sticky="nsew", padx=(7, 0))
@@ -134,6 +147,8 @@ class EthaneControlApp(tk.Tk):
         self.log.insert(tk.END, text)
         self.log.insert(tk.END, '\n')
         self.log.configure(state='disabled')
+        self.log.see("end")
+
 
     def _clear_log(self,) -> None:
         self.log.configure(state='normal')
