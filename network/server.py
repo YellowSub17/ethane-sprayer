@@ -127,7 +127,7 @@ class NetworkServer:
             try:
                 if self.pico and self.pico.in_waiting > 0:
                     response = self.pico.readline().decode('utf-8', errors='ignore').strip()
-                    print(f"[SERVER] Received UART: '{response}'")
+                    # print(f"[SERVER] Got message from pico: '{response}'")
                     if response:
                         self.send(response)
             except Exception as e:

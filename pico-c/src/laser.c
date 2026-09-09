@@ -51,7 +51,7 @@ int laser_gate() {
     while (!stdio_usb_connected()) sleep_ms(100);
 
     init_32bit_cycle_counter();
-    printf("Starting True 32-bit 125MHz (8ns) Dual-Gate Timer...\n");
+    printf("Starting 32-bit 125MHz (8ns) Dual-Gate Timer...\n");
 
     PIO pio = pio0;
 
