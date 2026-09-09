@@ -42,6 +42,7 @@ target_link_libraries(main
     pico_stdlib
     hardware_pio
     pico_multicore
+    hardware_exception
 )
 
 

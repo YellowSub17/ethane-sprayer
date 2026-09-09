@@ -54,6 +54,7 @@ int main() {
     gpio_interrupts_init();
     laser_init();
     motor_init();
+    photodiode_init();
 
     // Launch Core 1 execution loop
     multicore_launch_core1(core1_entry);
@@ -70,8 +71,15 @@ int main() {
             else if (strcmp(buffer, "LASER:0") == 0) {
                 laser_onoff(0);
             }
+
             else if (strcmp(buffer, "LASER:1") == 0) {
                 laser_onoff(1);
+            }
+            else if (strcmp(buffer, "GATES:AB") == 0) {
+                measure_gatesAB();
+            }
+            else if (strcmp(buffer, "GATES:ABC") == 0) {
+                measure_gatesABC();
             }
             else if (strcmp(buffer, "MOTOR:STOP") == 0) {
                 motor_stop();
