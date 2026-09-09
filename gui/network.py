@@ -28,6 +28,7 @@ class NetworkWindow(tk.Toplevel):
         self._build_body()
         self._build_footer()
 
+
     def _build_header(self):
         header = ttk.Frame(self, padding=(15,15,15,5))
         header.grid(row=0, column=0, sticky='ew')
@@ -73,7 +74,6 @@ class NetworkWindow(tk.Toplevel):
         port = self.port_entry.get()
 
         self.network_client.connect(host, port)
-        self.parent.process_log_queue()
 
 
 

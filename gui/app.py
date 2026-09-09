@@ -26,15 +26,13 @@ class EthaneControlApp(tk.Tk):
         self.network_window= None
         self.network_client = NetworkClient()
 
-        self.host = 'localhost'
-        self.port = 5001
-
         self._build_header()
         self._build_body()
         self._build_footer()
 
         _configure_styles(self)
 
+        self.process_log_queue()
         self.open_network_window()
 
 
