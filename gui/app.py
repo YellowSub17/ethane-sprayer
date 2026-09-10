@@ -23,8 +23,11 @@ class EthaneControlApp(tk.Tk):
         self.geometry("1120x720")
         self.minsize(980, 640)
         self.configure(bg=BG)
-        self.network_window= None
+
         self.network_client = NetworkClient()
+
+        self.network_window= None
+
 
         self._build_header()
         self._build_body()
