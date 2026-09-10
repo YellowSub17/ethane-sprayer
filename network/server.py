@@ -79,7 +79,7 @@ class NetworkServer:
         """Listens for incoming client socket connections and reads GUI commands."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind(('0.0.0.0', self.tcp_port))
+            s.bind(('127.0.0.1', self.tcp_port))
             s.listen()
             print(f"[SERVER] Bridge server listening on port {self.tcp_port}...")
 
