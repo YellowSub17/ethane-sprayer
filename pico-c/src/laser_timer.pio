@@ -1,0 +1,7 @@
+.program laser_gate
+
+.wrap_target
+    wait 0 pin 0        ; Block until pin goes LOW (Laser pulse / break)
+    push noblock        ; Capture timestamp immediately to FIFO
+    wait 1 pin 0        ; Wait for pin to return HIGH before resetting loop
+.wrap
