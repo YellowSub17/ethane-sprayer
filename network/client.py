@@ -48,7 +48,6 @@ class NetworkClient:
 
     def send_message(self, msg: str):
         """GUI calls this to push a message into the client's TX queue."""
-        print('x', self.connected)
         if self.connected:
             if not msg.endswith('\n'):
                 msg += '\n'
