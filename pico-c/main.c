@@ -71,7 +71,6 @@ int main() {
             else if (strcmp(buffer, "LASER:0") == 0) {
                 laser_onoff(0);
             }
-
             else if (strcmp(buffer, "LASER:1") == 0) {
                 laser_onoff(1);
             }
