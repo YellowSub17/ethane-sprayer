@@ -80,5 +80,4 @@ class NetworkConfigWindow(tk.Toplevel):
             self.client.disconnect()
 
     def on_close(self):
-        self.on_disconnect()
         self.destroy()
