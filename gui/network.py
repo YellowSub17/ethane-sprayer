@@ -41,7 +41,7 @@ class NetworkWindow(tk.Toplevel):
         self.host_label = ttk.Label(body, text='Host:')
         self.host_label.grid(row=0, column=0, padx=(0,10), pady=5, sticky='e')
         self.host_entry = ttk.Entry(body,)
-        self.host_entry.insert(0, 'ethanesprayer.local')
+        self.host_entry.insert(0, '130.238.39.32')
         self.host_entry.grid(row=0, column=1, pady=5, sticky='ew')
 
 
