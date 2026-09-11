@@ -91,7 +91,7 @@ class NetworkClient:
     def _connection_worker(self):
         tunnel_cmd = [
             "ssh",
-            "-i", self.ssh_key_path,
+            # "-i", self.ssh_key_path,  # disabled — ssh falls back to the default identity/agent
             "-N",  # Do not execute a remote command (tunnel only)
             "-o", "ControlMaster=no",  # Don't join/create a persistent background master
             "-o", "ControlPath=none",  # so terminating this process always frees the port
@@ -167,8 +167,10 @@ class NetworkClient:
                 data = self.socket.recv(1024)
                 if not data:
                     self.connected = False
-                    self.log_queue.put('[ERROR]\tServer disconnected')
-                    print('Server disconnected')
+                    if self._threads_running:
+                        # Socket closed on its own (not from a user-initiated disconnect)
+                        self.log_queue.put('[ERROR]\tServer disconnected')
+                        print('Server disconnected')
                     break
 
                 buffer += data.decode('utf-8', errors='ignore')

@@ -22,15 +22,15 @@ class NetworkConfigWindow(tk.Toplevel):
         self.ent_host.insert(0, self.network_config_values["host"])
         self.ent_host.grid(row=0, column=1, sticky="ew", pady=2)
 
-        # SSH Key File
-        tk.Label(form_frame, text="SSH Key:").grid(row=1, column=0, sticky="w", pady=2)
-        key_frame = tk.Frame(form_frame)
-        key_frame.grid(row=1, column=1, sticky="ew", pady=2)
+        # SSH Key File (disabled — ssh falls back to the default identity/agent)
+        # tk.Label(form_frame, text="SSH Key:").grid(row=1, column=0, sticky="w", pady=2)
+        # key_frame = tk.Frame(form_frame)
+        # key_frame.grid(row=1, column=1, sticky="ew", pady=2)
 
-        self.ent_key = tk.Entry(key_frame, width=15)
-        self.ent_key.insert(0, self.network_config_values["key_path"])
-        self.ent_key.pack(side="left", fill="x", expand=True)
-        tk.Button(key_frame, text="...", command=self._browse_key).pack(side="right")
+        # self.ent_key = tk.Entry(key_frame, width=15)
+        # self.ent_key.insert(0, self.network_config_values["key_path"])
+        # self.ent_key.pack(side="left", fill="x", expand=True)
+        # tk.Button(key_frame, text="...", command=self._browse_key).pack(side="right")
 
         # Local Port
         tk.Label(form_frame, text="Local Port:").grid(row=2, column=0, sticky="w", pady=2)
@@ -59,27 +59,27 @@ class NetworkConfigWindow(tk.Toplevel):
         self.btn_connect = tk.Button(left_col, text="Connect", command=self.on_connect, height=2)
         self.btn_connect.pack(fill="x")
 
-        self.btn_pat = tk.Button(left_col, text="PAT", command=self.on_pat, height=2)
-        self.btn_pat.pack(fill="x", pady=(5, 0))
+        # self.btn_pat = tk.Button(left_col, text="PAT", command=self.on_pat, height=2)
+        # self.btn_pat.pack(fill="x", pady=(5, 0))
 
         self.btn_disconnect = tk.Button(right_col, text="Disconnect", command=self.on_disconnect, height=2)
         self.btn_disconnect.pack(fill="x")
 
-        self.btn_jon = tk.Button(right_col, text="JON", command=self.on_jon, height=2)
-        self.btn_jon.pack(fill="x", pady=(5, 0))
+        # self.btn_jon = tk.Button(right_col, text="JON", command=self.on_jon, height=2)
+        # self.btn_jon.pack(fill="x", pady=(5, 0))
 
         # Handle window close X button
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-    def _browse_key(self):
-        filepath = filedialog.askopenfilename(title="Select Private SSH Key")
-        if filepath:
-            self.ent_key.delete(0, tk.END)
-            self.ent_key.insert(0, filepath)
+    # def _browse_key(self):
+    #     filepath = filedialog.askopenfilename(title="Select Private SSH Key")
+    #     if filepath:
+    #         self.ent_key.delete(0, tk.END)
+    #         self.ent_key.insert(0, filepath)
 
     def on_connect(self):
         host = self.ent_host.get().strip()
-        key_path = self.ent_key.get().strip()
+        key_path = ""  # SSH key entry disabled — ssh uses its default identity/agent
         local_port = self.ent_local_port.get().strip()
         remote_port = self.ent_remote_port.get().strip()
 
@@ -93,18 +93,18 @@ class NetworkConfigWindow(tk.Toplevel):
         if self.network_client.connected:
             self.network_client.disconnect()
 
-    def on_pat(self):
-        self.ent_key.delete(0, tk.END)
-        self.ent_key.insert(0, "/Users/pat/.ssh/id_ed25519")
+    # def on_pat(self):
+    #     self.ent_key.delete(0, tk.END)
+    #     self.ent_key.insert(0, "/Users/pat/.ssh/id_ed25519")
 
-    def on_jon(self):
-        self.ent_key.delete(0, tk.END)
-        self.ent_key.insert(0, r"C:\Users\jon\.ssh\id_ed25519")
+    # def on_jon(self):
+    #     self.ent_key.delete(0, tk.END)
+    #     self.ent_key.insert(0, r"C:\Users\jon\.ssh\id_ed25519")
 
     def _save_values(self):
         self.network_config_values.update({
             "host": self.ent_host.get().strip(),
-            "key_path": self.ent_key.get().strip(),
+            # "key_path": self.ent_key.get().strip(),
             "local_port": self.ent_local_port.get().strip(),
             "remote_port": self.ent_remote_port.get().strip(),
         })
