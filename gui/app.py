@@ -19,7 +19,7 @@ import queue
 class EthaneControlApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("Ethane Sprayer Control")
+        self.title("hello from claude")
         self.geometry("1120x720")
         self.minsize(980, 640)
         self.configure(bg=BG)

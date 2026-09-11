@@ -33,6 +33,19 @@ def _configure_styles(self) -> None:
     style.configure("Sub.TLabel", background=BG, foreground=MUTED, font=("Arial", 10))
     style.configure("Status.TLabel", background=PANEL, foreground=CYAN, font=("Arial", 20, "bold"))
     style.configure("TEntry", fieldbackground="#22333f", foreground=TEXT, insertcolor=TEXT)
+    style.configure(
+        "TButton",
+        font=("Arial", 10),
+        padding=(14, 8),
+        relief="flat",
+        borderwidth=0,
+        background="#22333f",
+        foreground=TEXT,
+    )
+    style.map(
+        "TButton",
+        background=[("active", "#2c4353"), ("pressed", "#1a2731")],
+    )
     style.configure("Start.TButton", font=("Arial", 12, "bold"), padding=10)
 
 
