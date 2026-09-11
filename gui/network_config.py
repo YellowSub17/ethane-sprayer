@@ -55,7 +55,7 @@ class NetworkConfigWindow(tk.Toplevel):
 
         ttk.Label(body, text='SSH key:').grid(row=3, column=0, padx=(0,10), pady=5, sticky="e")
         self.ssh_key_path_entry = ttk.Entry(body,)
-        self.ssh_key_path_entry.insert(0, '/Users/pat/.ssh/id_ed25519')
+        self.ssh_key_path_entry.insert(0, r'C:\Users\Jonat\.ssh\id_ed25519')
         self.ssh_key_path_entry.grid(row=3, column=1, pady=5, sticky='ew')
 
         ttk.Button(body, text='...', command=self.key_file_dialog).grid(row=3, column=3)
