@@ -78,11 +78,15 @@ class NetworkClient:
             "ssh",
             "-i", self.ssh_key_path,
             "-N",  # Do not execute a remote command (tunnel only)
+            "-o", "ControlMaster=no",  # Don't join/create a persistent background master
+            "-o", "ControlPath=none",  # so terminating this process always frees the port
+            "-o", "ExitOnForwardFailure=yes",  # exit immediately if the port bind fails
             "-L", f"{self.local_port}:127.0.0.1:{self.remote_port}",  # Local 5001 -> Pi 127.0.0.1:5001
             f"ethanesprayer@{self.host}"
         ]
 
-        self._tunnel_proc = subprocess.Popen(tunnel_cmd)
+        self._tunnel_proc = subprocess.Popen(tunnel_cmd, stderr=subprocess.PIPE, text=True)
+        threading.Thread(target=self._ssh_stderr_worker, daemon=True).start()
 
         time.sleep(1)  # Give SSH a moment to authenticate and bind the local port
 
@@ -111,6 +115,14 @@ class NetworkClient:
             self.connected = False
             self.log_queue.put(f'Failed to connect: {e}')
             print(f"Failed to connect: {e}")
+
+    def _ssh_stderr_worker(self):
+        """Forwards the SSH tunnel process's stderr output into the log queue."""
+        proc = self._tunnel_proc
+        for line in proc.stderr:
+            line = line.strip()
+            if line:
+                self.log_queue.put(f"[SSH] {line}")
 
     def _tx_worker(self):
         """Monitors tx_queue and writes commands to the socket."""
@@ -142,6 +154,7 @@ class NetworkClient:
                     self.connected = False
                     self.log_queue.put('Server disconnected')
                     print('Server disconnected')
+                    self.log_queue.put('x')  # TODO: replace with a custom error message
                     break
 
                 buffer += data.decode('utf-8', errors='ignore')

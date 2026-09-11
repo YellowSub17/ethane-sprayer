@@ -22,6 +22,12 @@ class EthaneControlApp(tk.Tk):
         self.network_client = NetworkClient()
 
         self.network_window= None
+        self.network_config_values = {
+            "host": "130.238.39.32",
+            "key_path": "",
+            "local_port": "5001",
+            "remote_port": "5001",
+        }
 
 
         self._build_header()
@@ -30,6 +36,22 @@ class EthaneControlApp(tk.Tk):
 
         self.process_log_queue()
         self.open_network_window()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        self._focus_to_front()
+
+    def _focus_to_front(self) -> None:
+        """Brings the app window to the front and gives it focus on launch."""
+        self.lift()
+        self.attributes("-topmost", True)
+        self.after(200, lambda: self.attributes("-topmost", False))
+        self.focus_force()
+
+    def on_close(self) -> None:
+        """Ensure the SSH tunnel and socket are torn down when the app exits."""
+        self.network_client.disconnect(verbose=0)
+        self.destroy()
 
 
     def _build_header(self) -> None:
@@ -172,4 +194,7 @@ class EthaneControlApp(tk.Tk):
 
 def main() -> None:
     app = EthaneControlApp()
-    app.mainloop()
+    try:
+        app.mainloop()
+    finally:
+        app.network_client.disconnect(verbose=0)
