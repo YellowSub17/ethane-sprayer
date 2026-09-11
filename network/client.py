@@ -24,6 +24,7 @@ class NetworkClient:
         # Worker threads
         self._threads_running = False
         self._tunnel_proc= None
+        self._worker_thread = None
 
 
 
@@ -38,7 +39,8 @@ class NetworkClient:
 
         self._threads_running = True
 
-        threading.Thread(target=self._connection_worker, daemon=True).start()
+        self._worker_thread = threading.Thread(target=self._connection_worker, daemon=True)
+        self._worker_thread.start()
 
     def disconnect(self, verbose=1):
         """Disconnects socket and stops background worker loops."""
@@ -53,11 +55,24 @@ class NetworkClient:
             self.socket = None
 
         if verbose:
-            self.log_queue.put(f'Disconnected from {self.host}:{self.remote_port}')
+            self.log_queue.put(f'[INFO]\tDisconnected from {self.host}:{self.remote_port}')
             print(f'Disconnected from {self.host}:{self.remote_port}')
+
+        # Wait for any in-flight connection attempt to finish assigning
+        # _tunnel_proc before touching it, so a fast reconnect can't race
+        # a previous attempt and leave its ssh process untracked/orphaned.
+        if self._worker_thread and self._worker_thread.is_alive():
+            self._worker_thread.join(timeout=5)
+        self._worker_thread = None
 
         if self._tunnel_proc:
             self._tunnel_proc.terminate()
+            try:
+                self._tunnel_proc.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                self._tunnel_proc.kill()
+                self._tunnel_proc.wait()
+            self._tunnel_proc = None
 
 
 
@@ -68,7 +83,7 @@ class NetworkClient:
                 msg += '\n'
             self.tx_queue.put(msg)
         else:
-            self.log_queue.put(f"Couldn't send '{msg}', no connection.")
+            self.log_queue.put(f"[ERROR]\tCannot send '{msg}': not connected.")
 
 
     # --- Private Worker Threads ---
@@ -91,8 +106,8 @@ class NetworkClient:
         time.sleep(1)  # Give SSH a moment to authenticate and bind the local port
 
         if self._tunnel_proc.poll() is not None:
-            self.log_queue.put(f"SSH process failed immediately with exit code {self._tunnel_proc.returncode}")
-            print(f"SSH process failed immediately with exit code {self._tunnel_proc.returncode}")
+            self.log_queue.put(f"[ERROR]\tSSH tunnel failed to start (exit code {self._tunnel_proc.returncode}).")
+            print(f"SSH tunnel failed to start (exit code {self._tunnel_proc.returncode}).")
             return
 
         try:
@@ -104,7 +119,7 @@ class NetworkClient:
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
             self.connected = True
-            self.log_queue.put(f'Connected to {self.host}:{self.remote_port}')
+            self.log_queue.put(f'[INFO]\tConnected to {self.host}:{self.remote_port}')
             print(f'Connected to {self.host}:{self.remote_port}')
 
             # Launch dedicated sender and receiver threads
@@ -113,7 +128,7 @@ class NetworkClient:
 
         except Exception as e:
             self.connected = False
-            self.log_queue.put(f'Failed to connect: {e}')
+            self.log_queue.put(f'[ERROR]\tFailed to connect: {e}')
             print(f"Failed to connect: {e}")
 
     def _ssh_stderr_worker(self):
@@ -122,7 +137,7 @@ class NetworkClient:
         for line in proc.stderr:
             line = line.strip()
             if line:
-                self.log_queue.put(f"[SSH] {line}")
+                self.log_queue.put(f"[SSH]\t{line}")
 
     def _tx_worker(self):
         """Monitors tx_queue and writes commands to the socket."""
@@ -139,7 +154,7 @@ class NetworkClient:
             except queue.Empty:
                 continue
             except Exception as e:
-                self.log_queue.put(f"Send failed: {e}")
+                self.log_queue.put(f"[ERROR]\tSend failed: {e}")
                 print(f"Send failed: {e}")
                 self.connected = False
                 break
@@ -152,9 +167,8 @@ class NetworkClient:
                 data = self.socket.recv(1024)
                 if not data:
                     self.connected = False
-                    self.log_queue.put('Server disconnected')
+                    self.log_queue.put('[ERROR]\tServer disconnected')
                     print('Server disconnected')
-                    self.log_queue.put('x')  # TODO: replace with a custom error message
                     break
 
                 buffer += data.decode('utf-8', errors='ignore')
