@@ -1,134 +1,226 @@
+
 import tkinter as tk
-from tkinter import filedialog, messagebox
-import subprocess
+from tkinter import ttk
+from .style import *
+from network.client import NetworkClient
+import queue
 import time
-from client import NetworkClient
+from tkinter import filedialog, messagebox
+
+
+
+
 
 class NetworkConfigWindow(tk.Toplevel):
-    def __init__(self, parent):
+
+    def __init__(self, parent: tk.Misc) -> None:
         super().__init__(parent)
-        self.title("Ethane Sprayer — Network Config")
-        self.geometry("380x320")
-        self.client = self.parent.network_client
-        self.ssh_process = None
+        self.parent = parent
+        self.network_client = self.parent.network_client
+        self._log = self.parent._log
 
-        # --- UI Form Fields ---
-        tk.Label(self, text="Network Configuration", font=("Helvetica", 16, "bold")).pack(pady=10)
+        self.title("Ethane Sprayer — Network Configuration")
 
-        form_frame = tk.Frame(self)
-        form_frame.pack(padx=20, fill="x")
+        self.configure(bg=BG)
+        self.transient(parent)
 
-        # Host (Pi IP or hostname)
-        tk.Label(form_frame, text="SSH Host:").grid(row=0, column=0, sticky="w", pady=2)
-        self.ent_host = tk.Entry(form_frame)
-        self.ent_host.insert(0, "ethanesprayer.local")
-        self.ent_host.grid(row=0, column=1, fill="x", pady=2)
+        self._build_header()
+        self._build_body()
+        self._build_footer()
 
-        # SSH User
-        tk.Label(form_frame, text="SSH User:").grid(row=1, column=0, sticky="w", pady=2)
-        self.ent_user = tk.Entry(form_frame)
-        self.ent_user.insert(0, "pi")
-        self.ent_user.grid(row=1, column=1, fill="x", pady=2)
 
-        # SSH Key File
-        tk.Label(form_frame, text="SSH Key:").grid(row=2, column=0, sticky="w", pady=2)
-        key_frame = tk.Frame(form_frame)
-        key_frame.grid(row=2, column=1, fill="x", pady=2)
+    def _build_header(self):
+        header = ttk.Frame(self, padding=(15,15,15,5))
+        header.grid(row=0, column=0, sticky='ew')
+        ttk.Label(header, text="Network Configuration", style="Title.TLabel").grid(row=0, column=0, columnspan=1)
 
-        self.ent_key = tk.Entry(key_frame, width=15)
-        self.ent_key.pack(side="left", fill="x", expand=True)
-        tk.Button(key_frame, text="...", command=self._browse_key).pack(side="right")
+    def _build_body(self):
+        body = ttk.Frame(self, padding=(15,5,15,15))
+        body.grid(row=1, column=0, sticky="nsew")
 
-        # Local Port
-        tk.Label(form_frame, text="Local Port:").grid(row=3, column=0, sticky="w", pady=2)
-        self.ent_local_port = tk.Entry(form_frame)
-        self.ent_local_port.insert(0, "5001")
-        self.ent_local_port.grid(row=3, column=1, fill="x", pady=2)
+        ttk.Label(body, text='Local Port:').grid(row=0, column=0, padx=(0,10), pady=5, sticky="e")
+        self.local_port_entry = ttk.Entry(body,)
+        self.local_port_entry.insert(0, '5001')
+        self.local_port_entry.grid(row=0, column=1, pady=5, sticky='ew')
 
-        # Remote Port (Pi Server Port)
-        tk.Label(form_frame, text="Remote Port:").grid(row=4, column=0, sticky="w", pady=2)
-        self.ent_remote_port = tk.Entry(form_frame)
-        self.ent_remote_port.insert(0, "5001")
-        self.ent_remote_port.grid(row=4, column=1, fill="x", pady=2)
+        ttk.Label(body, text='Host:').grid(row=1, column=0, padx=(0,10), pady=5, sticky='e')
+        self.host_entry = ttk.Entry(body,)
+        self.host_entry.insert(0, '130.238.39.32')
+        self.host_entry.grid(row=1, column=1, pady=5, sticky='ew')
 
-        form_frame.columnconfigure(1, weight=1)
+        ttk.Label(body, text='Remote Port:').grid(row=2, column=0, padx=(0,10), pady=5, sticky="e")
+        self.remote_port_entry = ttk.Entry(body,)
+        self.remote_port_entry.insert(0, '5001')
+        self.remote_port_entry.grid(row=2, column=1, pady=5, sticky='ew')
 
-        # --- Buttons ---
-        btn_frame = tk.Frame(self)
-        btn_frame.pack(pady=15, fill="x", padx=20)
+        ttk.Label(body, text='SSH key:').grid(row=3, column=0, padx=(0,10), pady=5, sticky="e")
+        self.ssh_key_path_entry = ttk.Entry(body,)
+        self.ssh_key_path_entry.insert(0, '/Users/pat/.ssh/id_ed25519')
+        self.ssh_key_path_entry.grid(row=3, column=1, pady=5, sticky='ew')
 
-        self.btn_connect = tk.Button(btn_frame, text="Connect", command=self.on_connect, height=2)
-        self.btn_connect.pack(side="left", fill="x", expand=True, padx=2)
+        ttk.Button(body, text='...', command=self.key_file_dialog).grid(row=3, column=3)
 
-        self.btn_disconnect = tk.Button(btn_frame, text="Disconnect", command=self.on_disconnect, height=2)
-        self.btn_disconnect.pack(side="right", fill="x", expand=True, padx=2)
 
-        # Handle window close X button
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
-
-    def _browse_key(self):
+    def key_file_dialog(self):
         filepath = filedialog.askopenfilename(title="Select Private SSH Key")
         if filepath:
             self.ent_key.delete(0, tk.END)
             self.ent_key.insert(0, filepath)
 
-    def on_connect(self):
-        host = self.ent_host.get().strip()
-        user = self.ent_user.get().strip()
-        key_path = self.ent_key.get().strip()
-        local_port = self.ent_local_port.get().strip()
-        remote_port = self.ent_remote_port.get().strip()
 
-        if not all([host, user, local_port, remote_port]):
-            messagebox.showerror("Error", "Please fill in all connection fields.")
-            return
+    def _build_footer(self):
 
-        # 1. Launch SSH Tunnel Process
-        try:
-            ssh_cmd = ["ssh"]
-            if key_path:
-                ssh_cmd.extend(["-i", key_path])
+        footer = ttk.Frame(self)
+        footer.grid(row=2, column=0)
+        connect_button = ttk.Button(footer, text='Connect', command=self.connect)
+        connect_button.grid(row=0,column=0)
 
-            # Forward: local_port -> 127.0.0.1:remote_port on Pi
-            ssh_cmd.extend([
-                "-N",
-                "-L", f"{local_port}:127.0.0.1:{remote_port}",
-                f"{user}@{host}"
-            ])
+        disconnect_button = ttk.Button(footer, text='Disconnect', command=self.disconnect)
+        disconnect_button.grid(row=0,column=1)
 
-            self.ssh_process = subprocess.Popen(ssh_cmd)
-            time.sleep(1.0)  # Short pause to allow SSH handshake to settle
 
-            # Check if process died immediately (e.g., bad IP or key)
-            if self.ssh_process.poll() is not None:
-                raise ConnectionError("SSH process exited immediately. Check host/key.")
 
-        except Exception as e:
-            messagebox.showerror("SSH Error", f"Failed to start SSH Tunnel:\n{e}")
-            self._close_tunnel()
-            return
 
-        # 2. Connect GUI NetworkClient to local tunnel endpoint
-        try:
-            self.client.connect("127.0.0.1", int(local_port))
-            messagebox.showinfo("Connected", f"Tunnel established!\nConnected via 127.0.0.1:{local_port}")
-        except Exception as e:
-            messagebox.showerror("Connection Error", f"Failed to connect client to tunnel:\n{e}")
-            self.on_disconnect()
+    def connect(self):
 
-    def on_disconnect(self):
-        # Disconnect TCP Client
-        if self.client:
-            self.client.disconnect()
+        host = self.host_entry.get()
+        local_port = self.local_port_entry.get()
+        remote_port = self.remote_port_entry.get()
+        ssh_key_path = self.ssh_key_path_entry.get()
 
-        # Kill SSH Tunnel
-        self._close_tunnel()
 
-    def _close_tunnel(self):
-        if self.ssh_process:
-            self.ssh_process.terminate()
-            self.ssh_process = None
+        self.network_client.connect(host, local_port, remote_port, ssh_key_path)
 
-    def on_close(self):
-        self.on_disconnect()
-        self.destroy()
+
+
+    def disconnect(self):
+
+
+        if self.network_client.connected:
+            self.network_client.disconnect()
+
+
+        self.after(200, self.parent._update_connection_status)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class NetworkWindow_OLD(tk.Toplevel):
+
+    def __init__(self, parent: tk.Misc) -> None:
+        super().__init__(parent)
+        self.parent = parent
+        self.network_client = self.parent.network_client
+        self._log = self.parent._log
+
+        self.title("Ethane Sprayer — Network Configuration")
+
+        self.configure(bg=BG)
+        self.transient(parent)
+
+        self._build_header()
+        self._build_body()
+        self._build_footer()
+
+
+    def _build_header(self):
+        header = ttk.Frame(self, padding=(15,15,15,5))
+        header.grid(row=0, column=0, sticky='ew')
+        ttk.Label(header, text="Network Configuration", style="Title.TLabel").grid(row=0, column=0, columnspan=1)
+
+    def _build_body(self):
+        body = ttk.Frame(self, padding=(15,5,15,15))
+        body.grid(row=1, column=0, sticky="nsew")
+
+        self.host_label = ttk.Label(body, text='Host:')
+        self.host_label.grid(row=0, column=0, padx=(0,10), pady=5, sticky='e')
+        self.host_entry = ttk.Entry(body,)
+        self.host_entry.insert(0, 'ethanesprayer.local')
+        self.host_entry.grid(row=0, column=1, pady=5, sticky='ew')
+
+
+        self.port_label = ttk.Label(body, text='Port:')
+        self.port_label.grid(row=1, column=0, padx=(0,10), pady=5, sticky="e")
+        self.port_entry = ttk.Entry(body,)
+        self.port_entry.insert(0, '5001')
+        self.port_entry.grid(row=1, column=1, pady=5, sticky='ew')
+
+
+    def _build_footer(self):
+
+        footer = ttk.Frame(self)
+        footer.grid(row=2, column=0)
+        connect_button = ttk.Button(footer, text='Connect', command=self.connect)
+        connect_button.grid(row=0,column=0)
+
+        disconnect_button = ttk.Button(footer, text='Disconnect', command=self.disconnect)
+        disconnect_button.grid(row=0,column=1)
+
+
+        # disconnect_button = ttk.Button(footer, text='Ping Server', command=self.ping_server)
+        # disconnect_button.grid(row=1,column=1)
+
+        # disconnect_button = ttk.Button(footer, text='Ping Server', command=self.ping_server)
+        # disconnect_button.grid(row=1,column=1)
+
+    def ping_server(self):
+        self.network_client.send_message('PINGping!~~')
+
+
+    def connect(self):
+
+        host = self.host_entry.get()
+        port = self.port_entry.get()
+
+        self.network_client.connect(host, port)
+
+
+
+
+    def disconnect(self):
+
+        host = self.network_client.host
+        port = self.network_client.port
+
+        if self.network_client.connected:
+            self.parent.network_client.disconnect()
+
+
+        self.after(200, self.parent._update_connection_status)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

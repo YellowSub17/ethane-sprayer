@@ -3,7 +3,7 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from .network import NetworkWindow
+from .network_config import NetworkConfigWindow
 from network.client import NetworkClient
 # from .color_scheme import *
 
@@ -143,7 +143,7 @@ class EthaneControlApp(tk.Tk):
             self.network_window.lift()
             self.network_window.focus_force()
             return
-        self.network_window = NetworkWindow(self)
+        self.network_window = NetworkConfigWindow(self)
 
 
     def _log(self, text) -> None:
