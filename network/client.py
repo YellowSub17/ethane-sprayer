@@ -13,7 +13,6 @@ class NetworkClient:
         self.host = None
         self.local_port = None
         self.remote_port = None
-        self.ssh_key_path = None
         self.socket = None
         self.connected = False
 
@@ -29,13 +28,12 @@ class NetworkClient:
 
 
 
-    def connect(self, host: str, local_port: int, remote_port:int, ssh_key_path:str):
+    def connect(self, host: str, local_port: int, remote_port:int):
         """Initiates background connection."""
         self.disconnect(verbose=0)  # Ensure old connection is closed
         self.host = host
         self.local_port = int(local_port)
         self.remote_port = int(remote_port)
-        self.ssh_key_path = ssh_key_path
 
         self._threads_running = True
 
@@ -101,8 +99,7 @@ class NetworkClient:
     def _connection_worker(self):
         tunnel_cmd = [
             "ssh",
-            # "-i", self.ssh_key_path,  # disabled — ssh falls back to the default identity/agent
-            "-N",  # Do not execute a remote command (tunnel only)
+            "-N",  # Do not execute a remote command (tunnel only, uses default identity/agent)
             "-o", "ControlMaster=no",  # Don't join/create a persistent background master
             "-o", "ControlPath=none",  # so terminating this process always frees the port
             "-o", "ExitOnForwardFailure=yes",  # exit immediately if the port bind fails
@@ -110,18 +107,7 @@ class NetworkClient:
             f"ethanesprayer@{self.host}"
         ]
 
-<<<<<<< HEAD
-        self._tunnel_proc = subprocess.Popen(tunnel_cmd, stderr=subprocess.PIPE, text=True)
-        threading.Thread(target=self._ssh_stderr_worker, daemon=True).start()
 
-        time.sleep(1)  # Give SSH a moment to authenticate and bind the local port
-
-        if self._tunnel_proc.poll() is not None:
-            self.log_queue.put(f"[ERROR]\tSSH tunnel failed to start (exit code {self._tunnel_proc.returncode}).")
-            print(f"SSH tunnel failed to start (exit code {self._tunnel_proc.returncode}).")
-            return
-=======
->>>>>>> 271c227cc1cfc27ccaf65f0056a2a1d9733552c6
 
         try:
             self._tunnel_proc = subprocess.Popen(tunnel_cmd)
@@ -135,23 +121,14 @@ class NetworkClient:
 
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(3) #how long to wait trying to connect
-<<<<<<< HEAD
-            self.socket.connect(("127.0.0.1", self.local_port))  # Through the SSH tunnel
-=======
             self.socket.connect(('127.0.0.1', self.local_port))
->>>>>>> 271c227cc1cfc27ccaf65f0056a2a1d9733552c6
             self.socket.settimeout(None)  # Switch back to blocking mode
 
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
             self.connected = True
-<<<<<<< HEAD
             self.log_queue.put(f'[INFO]\tConnected to {self.host}:{self.remote_port}')
             print(f'Connected to {self.host}:{self.remote_port}')
-=======
-            self.log_queue.put(f'Connected to {self.host}:{self.remote_port} via local tunnel port {self.local_port}')
-            print(f'Connected to {self.host}:{self.remote_port} via local tunnel port {self.local_port}')
->>>>>>> 271c227cc1cfc27ccaf65f0056a2a1d9733552c6
 
             # Launch dedicated sender and receiver threads
             threading.Thread(target=self._tx_worker, daemon=True).start()

@@ -15,7 +15,7 @@ import queue
 class EthaneControlApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("hello from claude")
+        self.title("Ethane Sprayer Control Panel")
         self.geometry("1120x720")
         self.minsize(980, 640)
 
@@ -24,7 +24,6 @@ class EthaneControlApp(tk.Tk):
         self.network_window= None
         self.network_config_values = {
             "host": "130.238.39.32",
-            "key_path": "",
             "local_port": "5001",
             "remote_port": "5001",
         }
@@ -95,24 +94,46 @@ class EthaneControlApp(tk.Tk):
 
         body_left = tk.Frame(body)
         body_left.grid(row=0, column=0, sticky="nsew", padx=(0, 7))
-        body_left.columnconfigure(0, weight=1)
-        body_left.rowconfigure(2, weight=1)
+        body_left.columnconfigure(0, weight=1, uniform="body_left_col")
+        body_left.columnconfigure(1, weight=1, uniform="body_left_col")
+        body_left.rowconfigure(4, weight=1)
 
-        laser0 = tk.Button(body_left, text='LASER:0', height=2, command=lambda: self.network_client.send_message('LASER:0')).grid(row=0, column=0, sticky="ew", padx=2, pady=2)
-        laser1 = tk.Button(body_left, text='LASER:1', height=2, command=lambda: self.network_client.send_message('LASER:1')).grid(row=0, column=1, sticky="ew", padx=2, pady=2)
+        laser0 = tk.Button(body_left, text='LASER:0', height=2,
+                           command=lambda: self.network_client.send_message('LASER:0'))
+        laser0.grid(row=0, column=0, sticky="ew", padx=2, pady=2)
+        laser1 = tk.Button(body_left, text='LASER:1', height=2,
+                           command=lambda: self.network_client.send_message('LASER:1'))
+        laser1.grid(row=0, column=1, sticky="ew", padx=2, pady=2)
 
-        steps20 = tk.Button(body_left, text='MOTOR:20', height=2, command=lambda: self.network_client.send_message('MOTOR:20')).grid(row=1, column=0, sticky="ew", padx=2, pady=2)
-        steps20 = tk.Button(body_left, text='MOTOR:-20', height=2, command=lambda: self.network_client.send_message('MOTOR:-20')).grid(row=1, column=1, sticky="ew", padx=2, pady=2)
+        steps20 = tk.Button(body_left, text='MOTOR:20', height=2,
+                            command=lambda: self.network_client.send_message('MOTOR:20'))
+        steps20.grid(row=1, column=0, sticky="ew", padx=2, pady=2)
+        stepsneg20 = tk.Button(body_left, text='MOTOR:-20', height=2,
+                               command=lambda: self.network_client.send_message('MOTOR:-20'))
+        stepsneg20.grid(row=1, column=1, sticky="ew", padx=2, pady=2)
 
-        steps20 = tk.Button(body_left, text='MOTOR:ENABLE', height=2, command=lambda: self.network_client.send_message('MOTOR:ENABLE')).grid(row=2, column=0, sticky="ew", padx=2, pady=2)
-        steps20 = tk.Button(body_left, text='MOTOR:DISABLE', height=2, command=lambda: self.network_client.send_message('MOTOR:DISABLE')).grid(row=2, column=1, sticky="ew", padx=2, pady=2)
+        motor_enable = tk.Button(body_left, text='MOTOR:ENABLE', height=2,
+                                  command=lambda: self.network_client.send_message('MOTOR:ENABLE'))
+        motor_enable.grid(row=2, column=0, sticky="ew", padx=2, pady=2)
+        motor_disable = tk.Button(body_left, text='MOTOR:DISABLE', height=2,
+                                   command=lambda: self.network_client.send_message('MOTOR:DISABLE'))
+        motor_disable.grid(row=2, column=1, sticky="ew", padx=2, pady=2)
+
+        motor_home = tk.Button(body_left, text='MOTOR:HOME', height=2,
+                                command=lambda: self.network_client.send_message('MOTOR:HOME'))
+        motor_home.grid(row=3, column=0, sticky="ew", padx=2, pady=2)
+        motor_stop = tk.Button(body_left, text='MOTOR:STOP', height=2,
+                               command=lambda: self.network_client.send_message('MOTOR:STOP'))
+        motor_stop.grid(row=3, column=1, sticky="ew", padx=2, pady=2)
 
 
 
         cmd_entry = tk.Entry(body_left)
-        cmd_entry.grid(row=3, column=0, sticky="ew", padx=2, pady=2)
+        cmd_entry.grid(row=5, column=0, sticky="ew", padx=2, pady=2)
         cmd_entry.insert(0, 'CMD')
-        send = tk.Button(body_left, text='SEND', height=2, command=lambda: self.network_client.send_message(cmd_entry.get())).grid(row=3, column=1, sticky="ew", padx=2, pady=2)
+        send = tk.Button(body_left, text='SEND', height=2,
+                         command=lambda: self.network_client.send_message(cmd_entry.get()))
+        send.grid(row=5, column=1, sticky="ew", padx=2, pady=2)
 
 
 
@@ -124,9 +145,10 @@ class EthaneControlApp(tk.Tk):
         tk.Label(body_right, text="EVENT LOG").grid(
             row=11, column=0, sticky="w"
         )
-        tk.Button(body_right, text="Clear Log", command = self._clear_log).grid(
-            row=11, column=1, sticky="e"
-                )
+        clear_log = tk.Button(body_right, text="CLEAR", height=2,
+                              anchor="center", justify="center",
+                              command=self._clear_log)
+        clear_log.grid(row=11, column=1, sticky="e")
         self.log = tk.Text(
             body_right,
             height=10,
