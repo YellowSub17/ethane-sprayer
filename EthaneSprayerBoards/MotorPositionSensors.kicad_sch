@@ -1,0 +1,30 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "84fc1301-c923-4009-99d9-d477ce435d64")
+	(paper "A4")
+	(lib_symbols)
+	(hierarchical_label "POT Soft Limit"
+		(shape input)
+		(at 95.25 81.28 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7e8d45f5-1afd-4609-9f6f-d8ee374e6e2d")
+	)
+	(hierarchical_label "NOT Soft Limit"
+		(shape input)
+		(at 96.52 92.71 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "beb09ad4-593e-4935-a68e-ed0b63490e75")
+	)
+)
