@@ -120,11 +120,11 @@ void motor_init(void) {
 
     gpio_init(PIN_MOTOR_POT);
     gpio_set_dir(PIN_MOTOR_POT, GPIO_IN);
-    gpio_pull_up(PIN_MOTOR_POT);
+    gpio_pull_down(PIN_MOTOR_POT);
 
     gpio_init(PIN_MOTOR_NOT);
     gpio_set_dir(PIN_MOTOR_NOT, GPIO_IN);
-    gpio_pull_up(PIN_MOTOR_NOT);
+    gpio_pull_down(PIN_MOTOR_NOT);
 
     gpio_init(PIN_MOTOR_HARDLIMIT);
     gpio_set_dir(PIN_MOTOR_HARDLIMIT, GPIO_IN);
@@ -151,7 +151,9 @@ void motor_tick(void) {
 
     if (current_state == STATE_HOMING_NOT) {
         // Read active-low NOT homing switch
-        if (gpio_get(PIN_MOTOR_NOT) == 0) {
+        if (gpio_get(PIN_MOTOR_NOT) == 1) {
+
+            printf("Hit switch!\n");
             absolute_position = 0;
             target_steps = DRIVER_MSTEP * 2;
             current_state = STATE_HOMING_POT;
@@ -172,7 +174,8 @@ void motor_tick(void) {
 
     if (current_state == STATE_HOMING_POT) {
         // Read active-low POT homing switch
-        if (gpio_get(PIN_MOTOR_POT) == 0) {
+        if (gpio_get(PIN_MOTOR_POT) == 1) {
+            printf("Hit top switch!\n");
             target_steps = 0;
             current_state = STATE_IDLE;
             zpositive_limit = absolute_position;
@@ -181,7 +184,7 @@ void motor_tick(void) {
             printf("Positive Limit: %d\n", zpositive_limit );
             fflush(stdout);
 
-            motor_set_steps(zpositive_limit/2);
+            /*motor_set_steps(zpositive_limit/2);*/
 
 
             return;
