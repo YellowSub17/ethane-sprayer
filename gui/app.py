@@ -1,15 +1,11 @@
 
 import time
 import tkinter as tk
-from tkinter import messagebox, ttk
 
 from .network_config import NetworkConfigWindow
 from network.client import NetworkClient
-# from .color_scheme import *
 
-from .style import *
-from .style import _configure_styles
-# from .jetspeed import JetSpeedWindow
+from .style import LOG_BG, LOG_FG, TEXT
 
 import socket
 import queue
@@ -19,30 +15,49 @@ import queue
 class EthaneControlApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("Ethane Sprayer Control")
+        self.title("hello from claude")
         self.geometry("1120x720")
         self.minsize(980, 640)
-        self.configure(bg=BG)
 
         self.network_client = NetworkClient()
 
         self.network_window= None
+        self.network_config_values = {
+            "host": "130.238.39.32",
+            "key_path": "",
+            "local_port": "5001",
+            "remote_port": "5001",
+        }
 
 
         self._build_header()
         self._build_body()
         self._build_footer()
 
-        _configure_styles(self)
-
         self.process_log_queue()
         self.open_network_window()
 
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        self._focus_to_front()
+
+    def _focus_to_front(self) -> None:
+        """Brings the app window to the front and gives it focus on launch."""
+        self.lift()
+        self.attributes("-topmost", True)
+        self.after(200, lambda: self.attributes("-topmost", False))
+        self.focus_force()
+
+    def on_close(self) -> None:
+        """Ensure the SSH tunnel and socket are torn down when the app exits."""
+        self.network_client.disconnect(verbose=0)
+        self.destroy()
+
 
     def _build_header(self) -> None:
-        header = ttk.Frame(self)
+        header = tk.Frame(self)
         header.pack(fill="x", padx=22, pady=(18, 12))
-        ttk.Label(header, text="ETHANE SPRAYER", style="Title.TLabel").pack(side="left")
+        tk.Label(header, text="ETHANE SPRAYER", font=("Helvetica", 16, "bold")).pack(side="left")
 
         # Canvas for the status indicator circle
         self.status_canvas = tk.Canvas(
@@ -72,44 +87,44 @@ class EthaneControlApp(tk.Tk):
 
 
     def _build_body(self) -> None:
-        body = ttk.Frame(self)
+        body = tk.Frame(self)
         body.pack(fill="both", expand=True, padx=22)
         body.columnconfigure(0, weight=3)
         body.columnconfigure(1, weight=2)
         body.rowconfigure(0, weight=1)
 
-        body_left = ttk.Frame(body, style="Panel.TFrame", padding=18)
+        body_left = tk.Frame(body)
         body_left.grid(row=0, column=0, sticky="nsew", padx=(0, 7))
         body_left.columnconfigure(0, weight=1)
         body_left.rowconfigure(2, weight=1)
 
-        laser0 = ttk.Button(body_left,text='LASER:0', command=lambda: self.network_client.send_message('LASER:0')).grid(row=0, column=0)
-        laser1 = ttk.Button(body_left,text='LASER:1', command=lambda: self.network_client.send_message('LASER:1')).grid(row=0, column=1)
+        laser0 = tk.Button(body_left, text='LASER:0', height=2, command=lambda: self.network_client.send_message('LASER:0')).grid(row=0, column=0, sticky="ew", padx=2, pady=2)
+        laser1 = tk.Button(body_left, text='LASER:1', height=2, command=lambda: self.network_client.send_message('LASER:1')).grid(row=0, column=1, sticky="ew", padx=2, pady=2)
 
-        steps20 = ttk.Button(body_left,text='MOTOR:20', command=lambda: self.network_client.send_message('MOTOR:20')).grid(row=1, column=0)
-        steps20 = ttk.Button(body_left,text='MOTOR:-20', command=lambda: self.network_client.send_message('MOTOR:-20')).grid(row=1, column=1)
+        steps20 = tk.Button(body_left, text='MOTOR:20', height=2, command=lambda: self.network_client.send_message('MOTOR:20')).grid(row=1, column=0, sticky="ew", padx=2, pady=2)
+        steps20 = tk.Button(body_left, text='MOTOR:-20', height=2, command=lambda: self.network_client.send_message('MOTOR:-20')).grid(row=1, column=1, sticky="ew", padx=2, pady=2)
 
-        steps20 = ttk.Button(body_left,text='MOTOR:ENABLE', command=lambda: self.network_client.send_message('MOTOR:ENABLE')).grid(row=2, column=0)
-        steps20 = ttk.Button(body_left,text='MOTOR:DISABLE', command=lambda: self.network_client.send_message('MOTOR:DISABLE')).grid(row=2, column=1)
+        steps20 = tk.Button(body_left, text='MOTOR:ENABLE', height=2, command=lambda: self.network_client.send_message('MOTOR:ENABLE')).grid(row=2, column=0, sticky="ew", padx=2, pady=2)
+        steps20 = tk.Button(body_left, text='MOTOR:DISABLE', height=2, command=lambda: self.network_client.send_message('MOTOR:DISABLE')).grid(row=2, column=1, sticky="ew", padx=2, pady=2)
 
 
 
-        cmd_entry = ttk.Entry(body_left,)
-        cmd_entry.grid(row=3, column=0)
+        cmd_entry = tk.Entry(body_left)
+        cmd_entry.grid(row=3, column=0, sticky="ew", padx=2, pady=2)
         cmd_entry.insert(0, 'CMD')
-        send = ttk.Button(body_left,text='SEND', command=lambda: self.network_client.send_message(cmd_entry.get())).grid(row=3, column=1)
+        send = tk.Button(body_left, text='SEND', height=2, command=lambda: self.network_client.send_message(cmd_entry.get())).grid(row=3, column=1, sticky="ew", padx=2, pady=2)
 
 
 
-        body_right = ttk.Frame(body, style="Panel.TFrame", padding=18)
+        body_right = tk.Frame(body)
         body_right.grid(row=0, column=1, sticky="nsew", padx=(7, 0))
         body_right.columnconfigure(1, weight=1)
         body_right.rowconfigure(12, weight=1)
 
-        ttk.Label(body_right, text="EVENT LOG", foreground=MUTED).grid(
+        tk.Label(body_right, text="EVENT LOG").grid(
             row=11, column=0, sticky="w"
         )
-        ttk.Button(body_right, text="Clear Log", command = self._clear_log).grid(
+        tk.Button(body_right, text="Clear Log", command = self._clear_log).grid(
             row=11, column=1, sticky="e"
                 )
         self.log = tk.Text(
@@ -131,10 +146,10 @@ class EthaneControlApp(tk.Tk):
 
 
     def _build_footer(self) -> None:
-        footer = ttk.Frame(self)
+        footer = tk.Frame(self)
         footer.pack(fill="x", padx=22, pady=16)
-        # ttk.Button(footer, text="Measure Jet Speed", command=self.open_jet_speed_window).pack(side="left")
-        ttk.Button(footer, text="Network", command=self.open_network_window).pack(side='left')
+        # tk.Button(footer, text="Measure Jet Speed", command=self.open_jet_speed_window).pack(side="left")
+        tk.Button(footer, text="Network", height=2, command=self.open_network_window).pack(side='left')
 
 
 
@@ -177,10 +192,9 @@ class EthaneControlApp(tk.Tk):
 
 
 
-
-
-
-
 def main() -> None:
     app = EthaneControlApp()
-    app.mainloop()
+    try:
+        app.mainloop()
+    finally:
+        app.network_client.disconnect(verbose=0)
