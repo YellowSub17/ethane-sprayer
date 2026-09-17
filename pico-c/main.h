@@ -26,6 +26,8 @@ bool motor_enable(void);
 void motor_disable(void);
 void motor_init(void);
 void motor_tick(void);
+void valve_init(void); //new
+void valve1(void);      //new
 void isr_systick();
 void pio_irq_handler();
 void init_cycle_counter();
