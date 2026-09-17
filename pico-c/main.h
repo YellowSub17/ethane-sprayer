@@ -1,6 +1,6 @@
 #pragma once
 #include "src/pins.h"
-#include "src/aux.h"
+
 void core1_entry();
 void blink_led(int n);
 void gpio_interrupts_init(void);
