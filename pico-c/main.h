@@ -16,14 +16,14 @@ bool motor_enable(void);
 void motor_disable(void);
 void motor_init(void);
 void motor_tick(void);
-void valve_init(void); //new
-void valve1(void);     //new
 void isr_systick();
 void pio_irq_handler();
 void init_cycle_counter();
 void photodiode_init();
 int measure_gatesABC();
 int measure_gatesAB();
+void valve_init(void);
+void valve1(void);
 #define INTERFACE 0
 #define EXPORT_INTERFACE 0
 #define LOCAL_INTERFACE 0
