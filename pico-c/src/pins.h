@@ -20,7 +20,7 @@
 #define PIN_MOTOR_NOT          20 //negative over travel switch
 #define PIN_MOTOR_HARDLIMIT    21 //negative over travel switch
 
-
+#define PIN_VALVE_1            22 //Valve 1 control pin
 
 
 
