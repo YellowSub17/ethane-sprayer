@@ -2,6 +2,9 @@
 #include "src/pins.h"
 #include "pico/stdlib.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+
 void core1_entry();
 void blink_led(int n);
 void gpio_interrupts_init(void);
