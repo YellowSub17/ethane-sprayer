@@ -1,5 +1,6 @@
 #pragma once
 #include "src/pins.h"
+#include 'pico/stdlib.h'
 
 void core1_entry();
 void blink_led(int n);
