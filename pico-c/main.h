@@ -8,7 +8,6 @@
 
 // Define the missing callback type used by your IRQ dispatcher
 typedef void (*gpio_handler_t)(uint gpio, uint32_t events);
-
 // Function declarations
 void gpio_register_handler(uint gpio, uint32_t events, gpio_handler_t handler);
 bool motor_enable(void);
