@@ -93,6 +93,9 @@ int main() {
                 val = atoi(buffer + 6); // Skip the 6 characters of "MOTOR=" and convert the rest
                 motor_set_steps(val);
             }
+            else if (strcmp(buffer, "VALVE_1") == 0) {
+                valve1();
+            }
         }
         sleep_us(100);
     }
