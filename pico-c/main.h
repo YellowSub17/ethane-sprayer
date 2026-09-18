@@ -1,6 +1,5 @@
 #pragma once
 #include "src/pins.h"
-#include "src/aux.h"
 
 #include <stdint.h>
 #include <stdbool.h>
