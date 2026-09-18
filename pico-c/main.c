@@ -55,6 +55,7 @@ int main() {
     laser_init();
     motor_init();
     photodiode_init();
+    valve_init();
 
     // Launch Core 1 execution loop
     multicore_launch_core1(core1_entry);
