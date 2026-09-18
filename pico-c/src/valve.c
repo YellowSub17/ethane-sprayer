@@ -15,7 +15,9 @@ void valve_init(void){
 
 
 void valve1(void){
-    printf("Valve 1 opening\n");
+    printf("Valve 1 open\n");
+    sleep_ms(1000);
+    printf("Valve 1 closing\n");
     //gpio_put(PIN_VALVE_1, 1);
     //sleep_ms(100);
 }
