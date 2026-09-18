@@ -12,21 +12,11 @@ void N2_valve_init(void){
     
 }
 
-
-void N2_valve(void)
-{
-    printf("N2 valve HIGH\n");
+void N2_valveREAL(void){
+    printf("N2 valve open\n");
     gpio_put(PIN_VALVE_3, 1);
-
-    while (true) {
-        sleep_ms(1000);
-    }
+    sleep_ms(500);
+    gpio_put(PIN_VALVE_3, 0);
+    printf("N2 valve closing\n");
+    sleep_ms(100);
 }
-//void N2_valveREAL(void){
-    //printf("N2 valve open\n");
-    //gpio_put(PIN_VALVE_3, 1);
-    //sleep_ms(500);
-    //gpio_put(PIN_VALVE_3, 0);
-    //printf("N2 valve closing\n");
-    //sleep_ms(100);
-//}
