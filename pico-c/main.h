@@ -25,14 +25,17 @@ bool motor_enable(void);
 void motor_disable(void);
 void motor_init(void);
 void motor_tick(void);
+void ethane_valve_1_init(void);
+void ethane_valve_1(void);
+void N2_valve_init(void);
+void N2_valve(void);
 void isr_systick();
 void pio_irq_handler();
 void init_cycle_counter();
 void photodiode_init();
 int measure_gatesABC();
 int measure_gatesAB();
-void valve_init(void);
-void valve1(void);
+
 #define INTERFACE 0
 #define EXPORT_INTERFACE 0
 #define LOCAL_INTERFACE 0
