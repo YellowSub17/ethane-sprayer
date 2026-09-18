@@ -4,7 +4,7 @@
 #include "pins.h"
 
 
-void valve_1_init(void){
+void ethane_valve_1_init(void){
     printf("Ethane valve init\n");
     gpio_init(PIN_VALVE_1);
     gpio_set_dir(PIN_VALVE_1, GPIO_OUT);
