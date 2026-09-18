@@ -1,9 +1,14 @@
 #pragma once
 #include "src/pins.h"
-#include "pico/stdlib.h"
+#include "src/aux.h"
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "pico/stdlib.h"  // Provides uint, gpio_irq_callback_t, etc.
+
+// Define the missing callback type used by your IRQ dispatcher
+typedef void (*gpio_handler_t)(uint gpio, uint32_t events);
+// Function declarations
 
 void core1_entry();
 void blink_led(int n);
