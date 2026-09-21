@@ -122,9 +122,24 @@ class EthaneControlApp(tk.Tk):
         motor_home = tk.Button(body_left, text='MOTOR:HOME', height=2,
                                 command=lambda: self.network_client.send_message('MOTOR:HOME'))
         motor_home.grid(row=3, column=0, sticky="ew", padx=2, pady=2)
+
         motor_stop = tk.Button(body_left, text='MOTOR:STOP', height=2,
                                command=lambda: self.network_client.send_message('MOTOR:STOP'))
         motor_stop.grid(row=3, column=1, sticky="ew", padx=2, pady=2)
+
+
+
+        valve_n2 = tk.Button(body_left, text='VALVE:3', height=2,
+                             command=lambda: self.network_client.send_message('VALVE:3'))
+        valve_n2.grid(row=4, column=0, sticky="ew", padx=2, pady=2)
+        valve_eth = tk.Button(body_left, text='VALVE:1', height=2,
+                              command=lambda: self.network_client.send_message('VALVE:1'))
+        valve_eth.grid(row=4, column=1, sticky="ew", padx=2, pady=2)
+
+
+
+
+
 
 
 
