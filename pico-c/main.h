@@ -1,9 +1,5 @@
 #pragma once
 #include "src/pins.h"
-<<<<<<< HEAD
-=======
-//#include "src/aux.h"
->>>>>>> 8bfa7ea2545f6bf720da27e32aa3984c757101d3
 
 #include <stdint.h>
 #include <stdbool.h>
