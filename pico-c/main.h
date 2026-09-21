@@ -1,5 +1,9 @@
 #pragma once
 #include "src/pins.h"
+<<<<<<< HEAD
+=======
+//#include "src/aux.h"
+>>>>>>> 8bfa7ea2545f6bf720da27e32aa3984c757101d3
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -8,8 +12,7 @@
 // Define the missing callback type used by your IRQ dispatcher
 typedef void (*gpio_handler_t)(uint gpio, uint32_t events);
 // Function declarations
-void gpio_register_handler(uint gpio, uint32_t events, gpio_handler_t handler);
-bool motor_enable(void);
+
 void core1_entry();
 void blink_led(int n);
 void gpio_interrupts_init(void);
@@ -25,14 +28,17 @@ bool motor_enable(void);
 void motor_disable(void);
 void motor_init(void);
 void motor_tick(void);
-void valve_init(void); //new
-void valve1(void);      //new
+void ethane_valve_1_init(void);
+void ethane_valve_1(void);
+void N2_valve_init(void);
+void N2_valve(void);
 void isr_systick();
 void pio_irq_handler();
 void init_cycle_counter();
 void photodiode_init();
 int measure_gatesABC();
 int measure_gatesAB();
+
 #define INTERFACE 0
 #define EXPORT_INTERFACE 0
 #define LOCAL_INTERFACE 0

@@ -55,6 +55,8 @@ int main() {
     laser_init();
     motor_init();
     photodiode_init();
+    ethane_valve_1_init();
+    N2_valve_init();
 
     // Launch Core 1 execution loop
     multicore_launch_core1(core1_entry);
@@ -94,7 +96,10 @@ int main() {
                 motor_set_steps(val);
             }
             else if (strcmp(buffer, "VALVE:1") == 0) {
-                valve1();
+                ethane_valve_1();
+            }
+            else if (strcmp(buffer, "VALVE:3") == 0) {
+                N2_valve();
             }
         }
         sleep_us(100);

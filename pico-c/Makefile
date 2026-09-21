@@ -20,7 +20,14 @@ all: flash
 	#@makeheaders -h main.c src/*.c >> main.h
 
 
-build-pi:
+build-mac: headers
+	@echo "Building headers..."
+	@export PICO_TOOLCHAIN_PATH="/opt/homebrew/opt/arm-none-eabi-gcc@9" && \
+	export PATH="/opt/homebrew/opt/arm-none-eabi-binutils/bin:/opt/homebrew/opt/arm-none-eabi-gcc@9/bin:$(PATH)" && \
+	cmake -B $(BUILD_DIR) -S . && \
+	cmake --build $(BUILD_DIR) -j$(JOBS)
+
+build-pi: #headers
 	@echo "Building src..."
 	@cmake -B $(BUILD_DIR) -S . -DPICO_SDK_PATH=$(PICO_SDK_PATH) -DPICOTOOL_FORCE_FETCH_FROM_GIT=1
 	@cmake --build $(BUILD_DIR) -j$(JOBS)
