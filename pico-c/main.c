@@ -101,6 +101,10 @@ int main() {
             else if (strcmp(buffer, "VALVE:3") == 0) {
                 N2_valve();
             }
+            else if (strncmp(buffer, "VALVETIME:", 10) == 0) {
+                val = atoi(buffer + 10); // Skip the 10 characters of "VALVETIME=" and convert the rest
+                N2_valve_var(val);
+            }
         }
         sleep_us(100);
     }

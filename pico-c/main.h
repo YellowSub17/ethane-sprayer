@@ -28,6 +28,7 @@ void ethane_valve_1_init(void);
 void ethane_valve_1(void);
 void N2_valve_init(void);
 void N2_valve(void);
+void N2_valve_var(int time);
 void isr_systick();
 void pio_irq_handler();
 void init_cycle_counter();

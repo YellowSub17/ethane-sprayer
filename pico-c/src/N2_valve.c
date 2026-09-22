@@ -20,3 +20,11 @@ void N2_valve(void){
     printf("N2 valve closing\n");
     sleep_ms(100);
 }
+void N2_valve_var(int time){
+    printf("N2 valve open\n");
+    gpio_put(PIN_VALVE_3, 1);
+    sleep_ms(time);
+    gpio_put(PIN_VALVE_3, 0);
+    printf("N2 valve closing\n");
+    sleep_ms(100);
+}
