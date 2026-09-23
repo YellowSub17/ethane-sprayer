@@ -40,7 +40,7 @@ void N2_valve_var(int time){
 
 N2_valve_tick(void){
     if (valve_state == VALVE_OPEN) {
-        uint64_t now = time_us64();
+        uint64_t now = time_us_64();
         if (now -valve_start_time >= 5000000) { 
             gpio_put(PIN_VALVE_3, 0);
             valve_state = VALVE_CLOSED;
