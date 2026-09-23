@@ -46,6 +46,7 @@ void core1_entry() {
     while (true) {
         // High-frequency execution loop
         motor_tick();
+        N2_valve_tick();
     }
 }
 

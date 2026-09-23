@@ -3,6 +3,13 @@
 #include "../main.h"
 #include "pins.h"
 
+typedef enum {
+    VALVE_CLOSED,
+    VALVE_OPEN,
+} ValveState;
+
+static ValveState valve_state = VALVE_CLOSED;
+static uint64_t valve_start_time = 0;
 
 void N2_valve_init(void){
     printf("N2 Valve init\n");
@@ -13,13 +20,15 @@ void N2_valve_init(void){
 }
 
 void N2_valve(void){
-    printf("N2 valve open\n");
+    if (valve_state != VALVE_CLOSED) {
+        return;
+    }
     gpio_put(PIN_VALVE_3, 1);
-    sleep_ms(500);
-    gpio_put(PIN_VALVE_3, 0);
-    printf("N2 valve closing\n");
-    sleep_ms(100);
+    valve_start_time = time_us_64();
+    valve_state = VALVE_OPEN;
+    printf("N2 valve open\n");
 }
+
 void N2_valve_var(int time){
     printf("N2 valve open\n");
     gpio_put(PIN_VALVE_3, 1);
@@ -27,4 +36,15 @@ void N2_valve_var(int time){
     gpio_put(PIN_VALVE_3, 0);
     printf("N2 valve closing\n");
     sleep_ms(100);
+}
+
+N2_valve_tick(void){
+    if (valve_state == VALVE_OPEN) {
+        uint64_t now = time_us64();
+        if (now -valve_start_time >= 5000000) { 
+            gpio_put(PIN_VALVE_3, 0);
+            valve_state = VALVE_CLOSED;
+            printf("N2 valve closing\n");
+        }
+    }
 }
