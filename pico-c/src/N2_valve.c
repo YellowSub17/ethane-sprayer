@@ -38,7 +38,7 @@ void N2_valve_var(int time){
     sleep_ms(100);
 }
 
-N2_valve_tick(void){
+void N2_valve_tick(void){
     if (valve_state == VALVE_OPEN) {
         uint64_t now = time_us_64();
         if (now -valve_start_time >= 5000000) { 
