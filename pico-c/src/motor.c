@@ -19,6 +19,9 @@ typedef enum {
     STATE_HOMING_NOT,
 } MotorState;
 
+static bool homed = false;
+static int absolute_position = 0;
+static int znegative_limit = 0;
 
 typedef void (*gpio_handler_t)(uint gpio, uint32_t events);
 // Register a specific pin and its handler function with the central dispatcher
@@ -184,7 +187,6 @@ void motor_tick(void) {
     if (current_state == STATE_HOMING_POT) {
         // Read active-low NOT homing switch
         if (gpio_get(PIN_MOTOR_POT) == 0) {
-            absolute_position = 0;
             //zpositive_limit = absolute_position;
             //target_steps = DRIVER_MSTEP * 2;
             sleep_ms(1000);
@@ -214,6 +216,7 @@ void motor_tick(void) {
             printf("Negative Limit: %d\n", znegative_limit );
             //printf("Positive Limit: %d\n", zpositive_limit );
             fflush(stdout);
+            homed = true;
 
             sleep_ms(1000);
             motor_set_steps(-(znegative_limit/2));
@@ -237,6 +240,11 @@ void motor_tick(void) {
     }
 
     if (current_state == STATE_MOVING && target_steps > 0) {
+        if (!homed) {
+            printf("ERROR: Motor has not been homed.\n");
+            fflush(stdout);
+            return;
+    }
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
 
