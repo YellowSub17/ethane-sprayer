@@ -119,6 +119,24 @@ void motor_disable(void) {
     printf("Disabled motor.\n");
     fflush(stdout);
 }
+void motor_reset(void)
+{
+    current_state = STATE_IDLE;
+
+    target_steps = 0;
+    current_dir = 1;
+
+    homed = false;
+    absolute_position = 0;
+    znegative_limit = 0;
+
+    limit_tripped = false;
+
+    motor_disable();
+
+    printf("Motor system reset.\n");
+    fflush(stdout);
+}
 
 static void motor_limit_isr(uint gpio, uint32_t events) {
     if (gpio == PIN_MOTOR_POT_HARDLIMIT) {
@@ -127,6 +145,8 @@ static void motor_limit_isr(uint gpio, uint32_t events) {
             return;
         }
         limit_tripped=true;
+        target_steps = 0;
+        current_state = STATE_IDLE;
         motor_disable();
         printf("Negative hardlimit hit! Motor disabled via Interrupt.\n");
         fflush(stdout);
@@ -137,6 +157,8 @@ static void motor_limit_isr(uint gpio, uint32_t events) {
             return;
         }
         limit_tripped=true;
+        target_steps = 0;
+        current_state = STATE_IDLE;
         motor_disable();
         printf("Positive hardlimit hit! Motor disabled via Interrupt.\n");
         fflush(stdout);

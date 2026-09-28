@@ -18,6 +18,7 @@ void laser_init(void);
 void laser_onoff(int laser_01);
 void motor_start_homing_POT(void);
 void motor_start_homing_NOT(void);
+void motor_reset(void);
 void motor_set_steps(int steps);
 void motor_stop(void);
 bool motor_enable(void);

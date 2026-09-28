@@ -92,6 +92,9 @@ int main() {
             else if (strcmp(buffer, "MOTOR:DISABLE") == 0) {
                 motor_disable();
             }
+            else if (strcmp(buffer, "MOTOR:RESET") == 0) {
+                motor_reset();
+            }
             else if (strncmp(buffer, "MOTOR:", 6) == 0) {
                 val = atoi(buffer + 6); // Skip the 6 characters of "MOTOR=" and convert the rest
                 motor_set_steps(val);
