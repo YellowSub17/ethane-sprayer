@@ -69,7 +69,7 @@ int main() {
         // Service serial commands non-blockingly
         if (read_line(buffer, sizeof(buffer))) {
             if (strcmp(buffer, "MOTOR:HOME") == 0) {
-                motor_start_homing_NOT();
+                motor_start_homing_POT();
             }
             else if (strcmp(buffer, "LASER:0") == 0) {
                 laser_onoff(0);

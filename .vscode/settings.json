@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/Jonat/Documents/forskningspraktik/ethane-sprayer/pico-c"
+    "cmake.sourceDirectory": "C:/Users/Jonat/Documents/forskningspraktik/ethane-sprayer/pico-c",
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

@@ -54,6 +54,23 @@ void motor_start_homing_NOT(void) {
 
 void motor_set_steps(int steps) {
     if (steps == 0) return;
+    int requested_position = absolute_position + steps; //new potential position after input steps
+
+    if (requested_position > znegative_limit-1) {
+        printf("ERROR: Movement would go past POT limit.\n");
+        printf("Current position: %d\n", absolute_position);
+        printf("Requested position: %d\n", requested_position);
+        fflush(stdout);
+        return;
+    }
+
+    if (requested_position < 1) {
+        printf("ERROR: Movement would go past NOT limit.\n");
+        printf("Current position: %d\n", absolute_position);
+        printf("Requested position: %d\n", requested_position);
+        fflush(stdout);
+        return;
+    }
     current_dir = (steps >= 0) ? 1 : 0;
     target_steps = (steps >= 0) ? steps : -steps;
     gpio_put(PIN_MOTOR_DIR, current_dir);
@@ -164,20 +181,21 @@ void motor_tick(void) {
     uint64_t now = time_us_64();
 
 
-    if (current_state == STATE_HOMING_NOT) {
+    if (current_state == STATE_HOMING_POT) {
         // Read active-low NOT homing switch
-        if (gpio_get(PIN_MOTOR_NOT) == 0) {
+        if (gpio_get(PIN_MOTOR_POT) == 0) {
             absolute_position = 0;
+            //zpositive_limit = absolute_position;
             target_steps = DRIVER_MSTEP * 2;
-            current_state = STATE_HOMING_POT;
-            printf("Finished Homing NOT\n");
+            current_state = STATE_HOMING_NOT;
+            printf("Finished Homing POT\n");
             fflush(stdout);
             return;
         }
 
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
-            gpio_put(PIN_MOTOR_DIR, 1); // Reverse/CCW/-Z towards NOT switch
+            gpio_put(PIN_MOTOR_DIR, 0); // Reverse/CCW/+Z towards POT switch
             gpio_put(PIN_MOTOR_STEP, 1);
             sleep_us(5);
             gpio_put(PIN_MOTOR_STEP, 0);
@@ -185,15 +203,15 @@ void motor_tick(void) {
         return;
     }
 
-    if (current_state == STATE_HOMING_POT) {
-        // Read active-low POT homing switch
-        if (gpio_get(PIN_MOTOR_POT) == 0) {
+    if (current_state == STATE_HOMING_NOT) {
+        // Read active-low NOT homing switch
+        if (gpio_get(PIN_MOTOR_NOT) == 0) {
             target_steps = 0;
             current_state = STATE_IDLE;
-            zpositive_limit = absolute_position;
-            printf("Finished Homing POT\n");
+            znegative_limit = absolute_position;
+            printf("Finished Homing NOT\n");
             printf("Negative Limit: %d\n", znegative_limit );
-            printf("Positive Limit: %d\n", zpositive_limit );
+            //printf("Positive Limit: %d\n", zpositive_limit );
             fflush(stdout);
 
             motor_set_steps(zpositive_limit/2);
@@ -204,7 +222,7 @@ void motor_tick(void) {
 
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
-            gpio_put(PIN_MOTOR_DIR, 0); // Forward/CW/+Z towards POT switch
+            gpio_put(PIN_MOTOR_DIR, 1); // Forward/CW/-Z towards NOT switch
             // step foward one step
             gpio_put(PIN_MOTOR_STEP, 1);
             sleep_us(5);
