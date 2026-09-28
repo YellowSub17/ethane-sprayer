@@ -20,8 +20,6 @@ typedef enum {
 } MotorState;
 
 static bool homed = false;
-static int absolute_position = 0;
-static int znegative_limit = 0;
 
 typedef void (*gpio_handler_t)(uint gpio, uint32_t events);
 // Register a specific pin and its handler function with the central dispatcher
