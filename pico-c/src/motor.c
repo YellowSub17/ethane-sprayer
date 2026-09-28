@@ -198,6 +198,7 @@ void motor_tick(void) {
         // Read active-low NOT homing switch
         if (!enabled){
             printf("Please enable motor.\n");
+            current_state = STATE_IDLE;
             fflush(stdout);
             return;
         }
