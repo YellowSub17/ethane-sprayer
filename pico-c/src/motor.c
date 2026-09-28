@@ -215,7 +215,8 @@ void motor_tick(void) {
             //printf("Positive Limit: %d\n", zpositive_limit );
             fflush(stdout);
 
-            motor_set_steps(-(zpositive_limit/2));
+            sleep_ms(1000);
+            motor_set_steps(-(znegative_limit/2));
             printf("Moving to center position: %d\n", (absolute_position));
 
             return;
