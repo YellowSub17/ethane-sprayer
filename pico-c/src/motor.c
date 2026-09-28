@@ -83,7 +83,7 @@ void motor_set_steps(int steps) {
         fflush(stdout);
         return;
     }
-    current_dir = (steps >= 0) ? 1 : 0;
+    current_dir = (steps >= 0) ? 0 : 1;
     target_steps = (steps >= 0) ? steps : -steps;
     gpio_put(PIN_MOTOR_DIR, current_dir);
     current_state = STATE_MOVING;
@@ -236,7 +236,7 @@ void motor_tick(void) {
 
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
-            gpio_put(PIN_MOTOR_DIR, 0); // Reverse/CCW/+Z towards POT switch
+            gpio_put(PIN_MOTOR_DIR, 1); // Reverse/CCW/+Z towards POT switch
             gpio_put(PIN_MOTOR_STEP, 1);
             sleep_us(5);
             gpio_put(PIN_MOTOR_STEP, 0);
@@ -265,7 +265,7 @@ void motor_tick(void) {
 
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
-            gpio_put(PIN_MOTOR_DIR, 1); // Forward/CW/-Z towards NOT switch
+            gpio_put(PIN_MOTOR_DIR, 0); // Forward/CW/-Z towards NOT switch
             // step foward one step
             gpio_put(PIN_MOTOR_STEP, 1);
             sleep_us(5);
