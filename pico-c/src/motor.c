@@ -55,6 +55,7 @@ void motor_start_homing_NOT(void) {
 }
 
 void motor_set_steps(int steps) {
+    printf("Setting steps\n");
     if (steps == 0) return;
     if (!homed) {
             printf("ERROR: Motor has not been homed.\n");
@@ -278,7 +279,7 @@ void motor_tick(void) {
     }
 
     if (current_state == STATE_MOVING && target_steps > 0) {
-        
+
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
 
