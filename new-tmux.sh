@@ -21,7 +21,7 @@ else
     # Send commands to individual panes
     tmux send-keys -t "$SESSION_NAME:1.1" "vim" C-m
     tmux send-keys -t "$SESSION_NAME:1.2" "cd pico-c" C-m
-    tmux send-keys -t "$SESSION_NAME:1.3" "minicom -b 115200 -o -D /dev/ttyACM0" C-m
+    tmux send-keys -t "$SESSION_NAME:1.3" "cd network" C-m
 
     # 4. Select the top pane before attaching
     tmux select-pane -t "$SESSION_NAME:1.1"
