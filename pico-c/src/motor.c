@@ -19,9 +19,6 @@ typedef enum {
     STATE_HOMING_NOT,
 } MotorState;
 
-/*static bool homed = false;*/
-/*static bool enabled = false;*/
-
 typedef void (*gpio_handler_t)(uint gpio, uint32_t events);
 // Register a specific pin and its handler function with the central dispatcher
 void gpio_register_handler(uint gpio, uint32_t events, gpio_handler_t handler);
@@ -35,19 +32,12 @@ static int current_dir = 1;
 static int absolute_position = 0;
 
 
-/*static volatile bool limit_tripped = false;*/
 
 static int znegative_limit = 0;
 static int zpositive_limit = 500;
 
 static uint64_t last_step_time = 0;
 
-/*void motor_start_homing(void) {*/
-    /*current_state = STATE_HOMING_POT;*/
-    /*motor_set_dir(1);*/
-    /*printf("Starting POT homing sequence...\n");*/
-    /*fflush(stdout);*/
-/*}*/
 
 void motor_start_homing(void) {
     current_state = STATE_HOMING_NOT;
@@ -58,16 +48,7 @@ void motor_start_homing(void) {
 
 void motor_set_steps(int steps) {
     if (steps == 0) return;
-/*    if (!homed) {*/
-            /*printf("ERROR: Motor has not been homed.\n");*/
-            /*fflush(stdout);*/
-            /*return;*/
-        /*}*/
-    /*if (!enabled) {*/
-            /*printf("ERROR: Motor is disabled.\n");*/
-            /*fflush(stdout);*/
-            /*return;*/
-        /*}*/
+
     int requested_position = absolute_position + steps; //new potential position after input steps
 
     if (requested_position > zpositive_limit-1) {
@@ -114,14 +95,12 @@ void motor_stop(void) {
 
 bool motor_enable(void) {
 
-    /*if (gpio_get(PIN_MOTOR_POT_HARDLIMIT) == 0 || gpio_get(PIN_MOTOR_NOT_HARDLIMIT) == 0) {*/
-        /*printf("Cannot enable motor: Hard limit switch is currently depressed!\n");*/
-        /*fflush(stdout);*/
-        /*return false; // Enable failed*/
-    /*}*/
+    if (gpio_get(PIN_MOTOR_POT_HARDLIMIT) == 0 || gpio_get(PIN_MOTOR_NOT_HARDLIMIT) == 0) {
+        printf("Cannot enable motor: Hard limit switch is currently depressed!\n");
+        fflush(stdout);
+        return false; // Enable failed
+    }
     gpio_put(PIN_MOTOR_ENABLE, 1);
-    /*limit_tripped=false;*/
-    /*enabled = true;*/
     printf("Enabled motor.\n");
     fflush(stdout);
     return true;
@@ -129,36 +108,13 @@ bool motor_enable(void) {
 
 void motor_disable(void) {
     gpio_put(PIN_MOTOR_ENABLE, 0);
-    /*enabled = false;*/
     printf("Disabled motor.\n");
     fflush(stdout);
 }
-void motor_reset(void)
-{
-    current_state = STATE_IDLE;
 
-    /*target_steps = 0;*/
-    /*current_dir = 1;*/
-
-    /*homed = false;*/
-    /*absolute_position = 0;*/
-    /*znegative_limit = 0;*/
-
-    /*limit_tripped = false;*/
-
-    /*motor_disable();*/
-
-    printf("Motor system reset.\n");
-    fflush(stdout);
-}
 
 static void motor_limit_isr(uint gpio, uint32_t events) {
     if (gpio == PIN_MOTOR_NOT_HARDLIMIT) {
-
-        /*if (limit_tripped) {*/
-            /*return;*/
-        /*}*/
-        /*limit_tripped=true;*/
         target_steps = 0;
         current_state = STATE_IDLE;
         motor_disable();
@@ -166,11 +122,6 @@ static void motor_limit_isr(uint gpio, uint32_t events) {
         fflush(stdout);
     }
     if (gpio == PIN_MOTOR_POT_HARDLIMIT) {
-
-        /*if (limit_tripped) {*/
-            /*return;*/
-        /*}*/
-        /*limit_tripped=true;*/
         target_steps = 0;
         current_state = STATE_IDLE;
         motor_disable();
@@ -231,16 +182,8 @@ void motor_tick(void) {
     uint64_t now = time_us_64();
 
     if (current_state == STATE_HOMING_NOT) {
-        // Read active-low NOT homing switch
-        /*if (!enabled){*/
-            /*printf("Please enable motor.\n");*/
-            /*current_state = STATE_IDLE;*/
-            /*fflush(stdout);*/
-            /*return;*/
-        /*}*/
+
         if (gpio_get(PIN_MOTOR_NOT) == 0) {
-            //zpositive_limit = absolute_position;
-            //target_steps = DRIVER_MSTEP * 2;
             sleep_ms(1000);
             absolute_position=0;
             current_state = STATE_HOMING_POT;
@@ -260,7 +203,6 @@ void motor_tick(void) {
     }
 
     if (current_state == STATE_HOMING_POT) {
-        // Read active-low NOT homing switch
         if (gpio_get(PIN_MOTOR_POT) == 0) {
             target_steps = 0;
             current_state = STATE_IDLE;
@@ -269,11 +211,7 @@ void motor_tick(void) {
             printf("Negative Limit: %d\n", 0 );
             printf("Positive Limit: %d\n", zpositive_limit );
             fflush(stdout);
-            /*homed = true;*/
-
             sleep_ms(1000);
-            /*motor_set_steps(-(znegative_limit/2));*/
-            /*printf("Moving to center position: %d\n", (znegative_limit/2));*/
 
             return;
         }
