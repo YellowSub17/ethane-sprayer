@@ -207,7 +207,7 @@ void motor_tick(void) {
             //target_steps = DRIVER_MSTEP * 2;
             sleep_ms(1000);
             current_state = STATE_HOMING_NOT;
-            printf("Finished Homing POT, Absolute Position: %d\n", (znegative_limit));
+            printf("Finished Homing POT, Absolute Position: %d\n", (absolute_position));
             fflush(stdout);
             return;
         }
@@ -236,7 +236,7 @@ void motor_tick(void) {
 
             sleep_ms(1000);
             motor_set_steps(-(znegative_limit/2));
-            printf("Moving to center position: %d\n", (absolute_position));
+            printf("Moving to center position: %d\n", (znegative_limit/2));
 
             return;
         }
