@@ -71,7 +71,7 @@ void motor_stop(void) {
 
 bool motor_enable(void) {
 
-    if (gpio_get(PIN_MOTOR_HARDLIMIT) == 0) {
+    if (gpio_get(PIN_MOTOR_POT_HARDLIMIT) == 0 || gpio_get(PIN_MOTOR_NOT_HARDLIMIT) == 0) {
         printf("Cannot enable motor: Hard limit switch is currently depressed!\n");
         fflush(stdout);
         return false; // Enable failed
@@ -90,14 +90,24 @@ void motor_disable(void) {
 }
 
 static void motor_limit_isr(uint gpio, uint32_t events) {
-    if (gpio == PIN_MOTOR_HARDLIMIT) {
+    if (gpio == PIN_MOTOR_POT_HARDLIMIT) {
 
         if (limit_tripped) {
             return;
         }
         limit_tripped=true;
         motor_disable();
-        printf("Hardlimit hit! Motor disabled via Interrupt.\n");
+        printf("Positive hardlimit hit! Motor disabled via Interrupt.\n");
+        fflush(stdout);
+    }
+    if (gpio == PIN_MOTOR_NOT_HARDLIMIT) {
+
+        if (limit_tripped) {
+            return;
+        }
+        limit_tripped=true;
+        motor_disable();
+        printf("Negative hardlimit hit! Motor disabled via Interrupt.\n");
         fflush(stdout);
     }
 }
@@ -126,12 +136,17 @@ void motor_init(void) {
     gpio_set_dir(PIN_MOTOR_NOT, GPIO_IN);
     gpio_pull_up(PIN_MOTOR_NOT);
 
-    gpio_init(PIN_MOTOR_HARDLIMIT);
-    gpio_set_dir(PIN_MOTOR_HARDLIMIT, GPIO_IN);
-    gpio_disable_pulls(PIN_MOTOR_HARDLIMIT);
+    gpio_init(PIN_MOTOR_POT_HARDLIMIT);
+    gpio_set_dir(PIN_MOTOR_POT_HARDLIMIT, GPIO_IN);
+    gpio_disable_pulls(PIN_MOTOR_POT_HARDLIMIT);
+
+    gpio_init(PIN_MOTOR_NOT_HARDLIMIT);
+    gpio_set_dir(PIN_MOTOR_NOT_HARDLIMIT, GPIO_IN);
+    gpio_disable_pulls(PIN_MOTOR_NOT_HARDLIMIT);
 
     // Register handler with the central coordinator
-    gpio_register_handler(PIN_MOTOR_HARDLIMIT, GPIO_IRQ_EDGE_FALL, motor_limit_isr);
+    gpio_register_handler(PIN_MOTOR_POT_HARDLIMIT, GPIO_IRQ_EDGE_FALL, motor_limit_isr);
+    gpio_register_handler(PIN_MOTOR_NOT_HARDLIMIT, GPIO_IRQ_EDGE_FALL, motor_limit_isr);
 }
 
 
