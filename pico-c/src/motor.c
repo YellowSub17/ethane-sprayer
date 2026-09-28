@@ -186,9 +186,10 @@ void motor_tick(void) {
         if (gpio_get(PIN_MOTOR_POT) == 0) {
             absolute_position = 0;
             //zpositive_limit = absolute_position;
-            target_steps = DRIVER_MSTEP * 2;
+            //target_steps = DRIVER_MSTEP * 2;
+            sleep_ms(1000);
             current_state = STATE_HOMING_NOT;
-            printf("Finished Homing POT\n");
+            printf("Finished Homing POT, Absolute Position: %d\n", (absolute_position));
             fflush(stdout);
             return;
         }
