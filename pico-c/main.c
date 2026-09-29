@@ -69,7 +69,7 @@ int main() {
         // Service serial commands non-blockingly
         if (read_line(buffer, sizeof(buffer))) {
             if (strcmp(buffer, "MOTOR:HOME") == 0) {
-                motor_start_homing_POT();
+                motor_start_homing();
             }
             else if (strcmp(buffer, "LASER:0") == 0) {
                 laser_onoff(0);
@@ -92,9 +92,9 @@ int main() {
             else if (strcmp(buffer, "MOTOR:DISABLE") == 0) {
                 motor_disable();
             }
-            else if (strcmp(buffer, "MOTOR:RESET") == 0) {
-                motor_reset();
-            }
+            /*else if (strcmp(buffer, "MOTOR:RESET") == 0) {*/
+                /*motor_reset();*/
+            /*}*/
             else if (strncmp(buffer, "MOTOR:", 6) == 0) {
                 val = atoi(buffer + 6); // Skip the 6 characters of "MOTOR=" and convert the rest
                 motor_set_steps(val);
