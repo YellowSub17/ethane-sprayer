@@ -25,6 +25,7 @@ void gpio_register_handler(uint gpio, uint32_t events, gpio_handler_t handler);
 
 static MotorState current_state = STATE_IDLE;
 static bool homed = false;
+static bool motor_enabled = false;
 
 static int target_steps = 0;
 static int current_dir = 1;
@@ -39,6 +40,11 @@ static uint64_t last_step_time = 0;
 
 
 void motor_start_homing(void) {
+    if (!motor_enabled) {
+        printf("ERROR: Enable motor\n");
+        fflush(stdout);
+        return;
+    }
     current_state = STATE_HOMING_NOT;
     printf("Starting homing sequence...\n");
     motor_set_dir(0);
@@ -47,8 +53,8 @@ void motor_start_homing(void) {
 
 void motor_set_steps(int steps) {
     if (steps == 0) return;
-    if (!homed) {
-        printf("ERROR: Motor must be calibrated\n");
+    if (!homed && motor_enabled) {
+        printf("ERROR: Motor must be calibrated or enabled\n");
         fflush(stdout);
         return;
     }
@@ -105,6 +111,7 @@ bool motor_enable(void) {
         return false; // Enable failed
     }
     gpio_put(PIN_MOTOR_ENABLE, 1);
+    motor_enabled = true;
     printf("Enabled motor.\n");
     fflush(stdout);
     return true;
@@ -134,7 +141,24 @@ static void motor_limit_isr(uint gpio, uint32_t events) {
     }
 }
 
+void motor_reset(void) {
+    gpio_put(PIN_MOTOR_ENABLE, 0);
+    motor_enabled = false;
 
+    current_state = STATE_IDLE;
+    homed = false;
+
+    target_steps = 0;
+    absolute_position = 0;
+    znegative_limit = 0;
+    zpositive_limit = 500; 
+    last_step_time = 0;
+
+    current_dir = 0;
+    gpio_put(PIN_MOTOR_DIR, 0);
+    printf("Motor parameters reset. Re-home before moving.\n");
+    fflush(stdout);
+}
 
 void motor_init(void) {
     gpio_init(PIN_MOTOR_STEP);
