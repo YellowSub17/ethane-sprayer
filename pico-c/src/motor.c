@@ -28,7 +28,7 @@ static bool homed = false;
 static bool motor_enabled = false;
 
 static int target_steps = 0;
-static int current_dir = 1;
+static int current_dir = 0;
 static int absolute_position = 0;
 
 
@@ -262,7 +262,7 @@ void motor_tick(void) {
     }
 
     if (current_state == STATE_MOVING && target_steps > 0) {
-        
+
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
 
