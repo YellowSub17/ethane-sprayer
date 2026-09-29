@@ -119,6 +119,7 @@ bool motor_enable(void) {
 
 void motor_disable(void) {
     gpio_put(PIN_MOTOR_ENABLE, 0);
+    motor_enabled = false;
     printf("Disabled motor.\n");
     fflush(stdout);
 }
@@ -237,10 +238,11 @@ void motor_tick(void) {
             zpositive_limit = absolute_position;
             homed = true;
             printf("Finished Homing POT\n");
+            sleep_ms(1000);
+            motor_set_steps(-(zpositive_limit/2)); // Move back to NOT switch
             printf("Negative Limit: %d\n", 0 );
             printf("Positive Limit: %d\n", zpositive_limit );
             fflush(stdout);
-            sleep_ms(1000);
 
             return;
         }
