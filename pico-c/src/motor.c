@@ -24,6 +24,7 @@ void gpio_register_handler(uint gpio, uint32_t events, gpio_handler_t handler);
 
 
 static MotorState current_state = STATE_IDLE;
+static bool homed = false;
 
 static int target_steps = 0;
 static int current_dir = 1;
@@ -46,6 +47,11 @@ void motor_start_homing(void) {
 
 void motor_set_steps(int steps) {
     if (steps == 0) return;
+    if (!homed) {
+        printf("ERROR: Motor must be calibrated\n");
+        fflush(stdout);
+        return;
+    }
 
     int requested_position = absolute_position + steps; //new potential position after input steps
 
@@ -205,6 +211,7 @@ void motor_tick(void) {
             target_steps = 0;
             current_state = STATE_IDLE;
             zpositive_limit = absolute_position;
+            homed = true;
             printf("Finished Homing POT\n");
             printf("Negative Limit: %d\n", 0 );
             printf("Positive Limit: %d\n", zpositive_limit );
