@@ -10,8 +10,6 @@
 #define DRIVER_MSTEP 200
 
 
-
-
 typedef enum {
     STATE_IDLE,
     STATE_MOVING,
