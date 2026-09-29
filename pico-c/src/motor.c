@@ -47,7 +47,7 @@ void motor_start_homing(void) {
     }
     current_state = STATE_HOMING_NOT;
     printf("Starting homing sequence...\n");
-    motor_set_dir(0);
+    motor_set_dir(1);
     fflush(stdout);
 }
 
@@ -78,9 +78,9 @@ void motor_set_steps(int steps) {
     }
 
     if ( steps < 0 ) {
-        motor_set_dir(0);
-    } else {
         motor_set_dir(1);
+    } else {
+        motor_set_dir(0);
     }
     target_steps = (steps >= 0) ? steps : -steps;
     current_state = STATE_MOVING;
@@ -217,7 +217,7 @@ void motor_tick(void) {
             absolute_position=0;
             current_state = STATE_HOMING_POT;
             printf("Finished Homing NOT\n");
-            motor_set_dir(1);
+            motor_set_dir(0);
             fflush(stdout);
             return;
         }
@@ -271,7 +271,7 @@ void motor_tick(void) {
             gpio_put(PIN_MOTOR_STEP, 0);
 
             target_steps--;
-            absolute_position += (current_dir == 1) ? 1 : -1;
+            absolute_position += (current_dir == 0) ? 1 : -1;
 
             if (target_steps == 0) {
                 current_state = STATE_IDLE;
