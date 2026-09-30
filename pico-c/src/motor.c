@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 // Delay in microseconds between steps (controls motor speed)
-#define STEP_DELAY_US 3200
+static int STEP_DELAY_US = 3200;
 
 // Steps per revolution
 #define DRIVER_MSTEP 400
@@ -62,6 +62,13 @@ void accuracy_test(void) {
     current_state = ACCURACY_TEST_POT;
     printf("Starting accuracy test...\n");
     motor_set_dir(1);
+    int list[5][2];
+    for (int row = 0; row < 5; row++) {
+        for (int col = 0; col < 2; col++) {
+            list[row][col] = 100;
+        }
+    }
+    static int i = 0; // Index for the accuracy test results
     fflush(stdout);
 }
 
@@ -224,14 +231,6 @@ void motor_init(void) {
 
 
 
-
-
-
-int list[5][2];
-
-std::fill(&list[0][0], &list[0][0] + 5 * 2, 100);
-
-
 // Called on every iteration of the main loop (non-blocking)
 void motor_tick(void) {
 
@@ -308,8 +307,8 @@ void motor_tick(void) {
             absolute_position += (current_dir == 0) ? 1 : -1;
 
             }
-        }
     }
+    
     if (current_state == ACCURACY_TEST_POT) {
         if (gpio_get(PIN_MOTOR_POT) == 0) {
             printf("%d\n", absolute_position);
