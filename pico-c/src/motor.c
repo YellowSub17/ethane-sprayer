@@ -34,13 +34,13 @@ static int current_dir = 0;
 static int absolute_position = 0;
 
 static int i = 0; // Index for the accuracy test results
-int list[5][2];
-list = [[100, 100],
-[100, 100],
-[100, 100],
-[100, 100],
-[100, 100]
-];
+int list[5][2] = {
+    {100, 100},
+    {100, 100},
+    {100, 100},
+    {100, 100},
+    {100, 100}
+};
 
 
 
