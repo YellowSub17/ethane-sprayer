@@ -35,11 +35,13 @@ static int absolute_position = 0;
 
 static int i = 0; // Index for the accuracy test results
 int list[5][2];
-for (int row = 0; row < 5; row++) {
-    for (int col = 0; col < 2; col++) {
-        list[row][col] = 100;
-    }
-}
+list = [[100, 100],
+[100, 100],
+[100, 100],
+[100, 100],
+[100, 100]
+];
+
 
 
 
