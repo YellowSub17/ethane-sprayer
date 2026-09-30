@@ -33,6 +33,14 @@ static int target_steps = 0;
 static int current_dir = 0;
 static int absolute_position = 0;
 
+static int i = 0; // Index for the accuracy test results
+int list[5][2];
+for (int row = 0; row < 5; row++) {
+    for (int col = 0; col < 2; col++) {
+        list[row][col] = 100;
+    }
+}
+
 
 
 static int znegative_limit = 0;
@@ -62,13 +70,6 @@ void accuracy_test(void) {
     current_state = ACCURACY_TEST_POT;
     printf("Starting accuracy test...\n");
     motor_set_dir(1);
-    int list[5][2];
-    for (int row = 0; row < 5; row++) {
-        for (int col = 0; col < 2; col++) {
-            list[row][col] = 100;
-        }
-    }
-    static int i = 0; // Index for the accuracy test results
     fflush(stdout);
 }
 

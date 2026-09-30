@@ -98,8 +98,8 @@ int main() {
             else if (strcmp(buffer, "MOTOR:RESET") == 0) {
                 motor_reset();
             }
-            else if (strncmp(buffer, "STEPTIME:") == 0){ 
-                val = atoi(buffer + 9); // Skip the 9 characters of "STEPTIME=" and convert the rest
+            else if (strncmp(buffer, "STEPTIME:", 9) == 0){ 
+                val = atoi(buffer + 9); // Skip the 9 characters of "STEPTIME:=" and convert the rest
                 step_time(val);
             }
             else if (strncmp(buffer, "MOTOR:", 6) == 0) {
