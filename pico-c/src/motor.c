@@ -161,6 +161,17 @@ void motor_reset(void) {
     fflush(stdout);
 }
 
+void step_time(int time) {      // Set the delay between steps in microseconds
+    if (time < 1000 || time > 10000) {
+        printf("ERROR: invalid step time: 1000<steptime<10,000\n");
+        fflush(stdout);
+        return;
+    }
+    STEP_DELAY_US = time;
+    printf("Step time set to %dus\n", time);
+    fflush(stdout);
+}
+
 void motor_init(void) {
     gpio_init(PIN_MOTOR_STEP);
     gpio_set_dir(PIN_MOTOR_STEP, GPIO_OUT);
