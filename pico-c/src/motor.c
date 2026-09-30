@@ -15,6 +15,8 @@ typedef enum {
     STATE_MOVING,
     STATE_HOMING_POT,
     STATE_HOMING_NOT,
+    ACCURACY_TEST_NOT,
+    ACCURACY_TEST_POT
 } MotorState;
 
 typedef void (*gpio_handler_t)(uint gpio, uint32_t events);
@@ -47,6 +49,18 @@ void motor_start_homing(void) {
     }
     current_state = STATE_HOMING_NOT;
     printf("Starting homing sequence...\n");
+    motor_set_dir(1);
+    fflush(stdout);
+}
+
+void accuracy_test(void) {
+    if (!motor_enabled || !homed) {
+        printf("ERROR: Enable or calibrate motor\n");
+        fflush(stdout);
+        return;
+    }
+    current_state = ACCURACY_TEST_POT;
+    printf("Starting accuracy test...\n");
     motor_set_dir(1);
     fflush(stdout);
 }
@@ -213,7 +227,9 @@ void motor_init(void) {
 
 
 
+int list[5][2];
 
+std::fill(&list[0][0], &list[0][0] + 5 * 2, 100);
 
 
 // Called on every iteration of the main loop (non-blocking)
@@ -271,6 +287,67 @@ void motor_tick(void) {
         }
         return;
     }
+        // Accuracy test state machine
+    if (current_state == ACCURACY_TEST_NOT) {
+        if (gpio_get(PIN_MOTOR_NOT) == 0) {
+            printf("%d\n", absolute_position);
+            list[i][0] = absolute_position;
+            sleep_ms(1000);
+            current_state = ACCURACY_TEST_POT;
+            motor_set_dir(0);
+            fflush(stdout);
+            return;
+        }
+        if (now - last_step_time >= STEP_DELAY_US) {
+            last_step_time = now;
+
+            gpio_put(PIN_MOTOR_STEP, 1);
+            sleep_us(5);
+            gpio_put(PIN_MOTOR_STEP, 0);
+
+            absolute_position += (current_dir == 0) ? 1 : -1;
+
+            }
+        }
+    }
+    if (current_state == ACCURACY_TEST_POT) {
+        if (gpio_get(PIN_MOTOR_POT) == 0) {
+            printf("%d\n", absolute_position);
+            list[i][1] = absolute_position - zpositive_limit; 
+            sleep_ms(1000);
+            i++;
+            if (i >= 5) {
+                current_state = STATE_IDLE;
+                printf("\nAccuracy test results:\n");
+                printf("----------------------------\n");
+                printf("Diff    NOT       POT\n");
+                printf("----------------------------\n");
+                for (int j = 0; j < 5; j++) {
+                    printf("%-7d %-9d %d\n",
+                    j + 1,
+                    list[j][0],
+                    list[j][1]);
+                }
+                printf("----------------------------\n");
+            } else {
+                current_state = ACCURACY_TEST_NOT;
+                motor_set_dir(0);
+                fflush(stdout);
+                return;
+            } 
+        }
+        if (now - last_step_time >= STEP_DELAY_US) {
+            last_step_time = now;
+
+            gpio_put(PIN_MOTOR_STEP, 1);
+            sleep_us(5);
+            gpio_put(PIN_MOTOR_STEP, 0);
+
+            absolute_position += (current_dir == 0) ? 1 : -1;
+
+        }
+    }
+    
 
     if (current_state == STATE_MOVING && target_steps > 0) {
 

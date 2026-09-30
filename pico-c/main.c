@@ -71,6 +71,9 @@ int main() {
             if (strcmp(buffer, "MOTOR:HOME") == 0) {
                 motor_start_homing();
             }
+            if (strcmp(buffer, "MOTOR:ACCURACY_TEST") == 0) {
+                accuracy_test();
+            }
             else if (strcmp(buffer, "LASER:0") == 0) {
                 laser_onoff(0);
             }

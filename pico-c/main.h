@@ -17,6 +17,7 @@ void gpio_register_handler(uint gpio,uint32_t events,gpio_handler_t handler);
 void laser_init(void);
 void laser_onoff(int laser_01);
 void motor_start_homing(void);
+void accuracy_test(void);
 //void motor_start_homing_POT(void);
 //void motor_start_homing_NOT(void);
 void motor_reset(void);
