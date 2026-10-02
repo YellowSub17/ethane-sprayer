@@ -256,7 +256,7 @@ void motor_tick(void) {
             }
 
             current_state = STATE_HOMING_POT;
-            absolute_position +=step_i;
+            absolute_position +=10;
 
 
 
