@@ -69,7 +69,7 @@ void accuracy_test(void) {
         fflush(stdout);
         return;
     }
-    current_state = ACCURACY_TEST_POT;
+    current_state = ACCURACY_TEST_NOT;
     printf("Starting accuracy test...\n");
     motor_set_dir(1);
     fflush(stdout);
@@ -248,17 +248,20 @@ void motor_tick(void) {
             motor_set_dir(0);
             fflush(stdout);
 
-            printf("Stepping 10:\n");
-            for (int step_i=0; step_i<10;step_i++){
-                sleep_ms(1000);
+            printf("Stepping 40:\n");
+            for (int step_i=0; step_i<40;step_i++){
+                sleep_us(6400);
                 gpio_put(PIN_MOTOR_STEP, 1);
                 sleep_us(5);
                 gpio_put(PIN_MOTOR_STEP, 0);
                 printf("Step: %d\n", step_i);
             }
 
+            sleep_ms(1000);
+            printf("Finished stepping 40\n");
+
             current_state = STATE_HOMING_POT;
-            absolute_position +=10;
+            absolute_position +=40;
 
 
 
