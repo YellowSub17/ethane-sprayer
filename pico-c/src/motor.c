@@ -248,15 +248,17 @@ void motor_tick(void) {
             motor_set_dir(0);
             fflush(stdout);
 
+            printf("Stepping 10:\n");
             for (int step_i=0; step_i<10;step_i++){
-                sleep_us(6400);
+                sleep_ms(1000);
                 gpio_put(PIN_MOTOR_STEP, 1);
                 sleep_us(5);
                 gpio_put(PIN_MOTOR_STEP, 0);
+                printf("Step: %d\n", step_i);
             }
 
             current_state = STATE_HOMING_POT;
-            absolute_position +=step_i;
+            absolute_position +=10;
 
 
 
