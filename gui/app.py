@@ -197,7 +197,8 @@ class EthaneControlApp(tk.Tk):
         footer.pack(fill="x", padx=22, pady=16)
         # tk.Button(footer, text="Measure Jet Speed", command=self.open_jet_speed_window).pack(side="left")
         tk.Button(footer, text="Network", height=2, command=self.open_network_window).pack(side='left')
-
+        tk.Button(footer, text="MOTOR:ACC", height=2, command=lambda: self.network_client.send_message('MOTOR:ACCURACY_TEST')).pack(side='left')
+        tk.Button(footer, text="MOTOR:RESET", height=2, command=lambda: self.network_client.send_message('MOTOR:RESET')).pack(side='left')
 
 
     def open_network_window(self) -> None:
