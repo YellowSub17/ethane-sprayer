@@ -96,7 +96,7 @@ class EthaneControlApp(tk.Tk):
         body_left.grid(row=0, column=0, sticky="nsew", padx=(0, 7))
         body_left.columnconfigure(0, weight=1, uniform="body_left_col")
         body_left.columnconfigure(1, weight=1, uniform="body_left_col")
-        body_left.rowconfigure(4, weight=1)
+        body_left.rowconfigure(5, weight=1)
 
         laser0 = tk.Button(body_left, text='LASER:0', height=2,
                            command=lambda: self.network_client.send_message('LASER:0'))
@@ -127,14 +127,24 @@ class EthaneControlApp(tk.Tk):
                                command=lambda: self.network_client.send_message('MOTOR:STOP'))
         motor_stop.grid(row=3, column=1, sticky="ew", padx=2, pady=2)
 
+        steptime = tk.Button(body_left, text='STEPTIME:', height=2,
+                             command=self._send_steptime)
+        steptime.grid(row=4, column=0, sticky="ew", padx=2, pady=2)
+        # Integer-only entry: allow digits (or empty while editing)
+        int_vcmd = (self.register(lambda v: v == "" or v.isdigit()), '%P')
+        self.steptime_entry = tk.Entry(body_left, validate="key", validatecommand=int_vcmd,
+                                       justify="center")
+        self.steptime_entry.grid(row=4, column=1, sticky="ew", padx=2, pady=2)
+        self.steptime_entry.insert(0, '0')
+
 
 
         valve_n2 = tk.Button(body_left, text='VALVE:3', height=2,
                              command=lambda: self.network_client.send_message('VALVE:3'))
-        valve_n2.grid(row=4, column=0, sticky="ew", padx=2, pady=2)
+        valve_n2.grid(row=5, column=0, sticky="ew", padx=2, pady=2)
         valve_eth = tk.Button(body_left, text='VALVE:1', height=2,
                               command=lambda: self.network_client.send_message('VALVE:1'))
-        valve_eth.grid(row=4, column=1, sticky="ew", padx=2, pady=2)
+        valve_eth.grid(row=5, column=1, sticky="ew", padx=2, pady=2)
 
 
 
@@ -144,11 +154,11 @@ class EthaneControlApp(tk.Tk):
 
 
         cmd_entry = tk.Entry(body_left)
-        cmd_entry.grid(row=5, column=0, sticky="ew", padx=2, pady=2)
+        cmd_entry.grid(row=6, column=0, sticky="ew", padx=2, pady=2)
         cmd_entry.insert(0, 'CMD')
         send = tk.Button(body_left, text='SEND', height=2,
                          command=lambda: self.network_client.send_message(cmd_entry.get()))
-        send.grid(row=5, column=1, sticky="ew", padx=2, pady=2)
+        send.grid(row=6, column=1, sticky="ew", padx=2, pady=2)
 
 
 
@@ -196,6 +206,13 @@ class EthaneControlApp(tk.Tk):
             self.network_window.focus_force()
             return
         self.network_window = NetworkConfigWindow(self)
+
+
+    def _send_steptime(self) -> None:
+        value = self.steptime_entry.get().strip()
+        if not value:
+            return
+        self.network_client.send_message(f'STEPTIME:{int(value)}')
 
 
     def _log(self, text) -> None:

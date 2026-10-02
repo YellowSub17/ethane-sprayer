@@ -176,7 +176,7 @@ void motor_reset(void) {
     target_steps = 0;
     absolute_position = 0;
     znegative_limit = 0;
-    zpositive_limit = 500; 
+    zpositive_limit = 500;
     last_step_time = 0;
 
     current_dir = 0;
@@ -244,10 +244,23 @@ void motor_tick(void) {
         if (gpio_get(PIN_MOTOR_NOT) == 0) {
             sleep_ms(1000);
             absolute_position=0;
-            current_state = STATE_HOMING_POT;
             printf("Finished Homing NOT\n");
             motor_set_dir(0);
             fflush(stdout);
+
+            for (int step_i=0; step_i<10;step_i++){
+                sleep_us(6400);
+                gpio_put(PIN_MOTOR_STEP, 1);
+                sleep_us(5);
+                gpio_put(PIN_MOTOR_STEP, 0);
+            }
+
+            current_state = STATE_HOMING_POT;
+            absolute_position +=step_i;
+
+
+
+
             return;
         }
 
@@ -311,11 +324,11 @@ void motor_tick(void) {
 
             }
     }
-    
+
     if (current_state == ACCURACY_TEST_POT) {
         if (gpio_get(PIN_MOTOR_POT) == 0) {
             printf("%d\n", absolute_position);
-            list[i][1] = absolute_position - zpositive_limit; 
+            list[i][1] = absolute_position - zpositive_limit;
             sleep_ms(1000);
             i++;
             if (i >= 5) {
@@ -336,7 +349,7 @@ void motor_tick(void) {
                 motor_set_dir(0);
                 fflush(stdout);
                 return;
-            } 
+            }
         }
         if (now - last_step_time >= STEP_DELAY_US) {
             last_step_time = now;
@@ -349,7 +362,7 @@ void motor_tick(void) {
 
         }
     }
-    
+
 
     if (current_state == STATE_MOVING && target_steps > 0) {
 
