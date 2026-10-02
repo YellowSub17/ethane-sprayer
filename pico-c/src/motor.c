@@ -313,8 +313,21 @@ void motor_tick(void) {
             printf("%d\n", absolute_position);
             list[i][0] = absolute_position;
             sleep_ms(1000);
-            current_state = ACCURACY_TEST_POT;
             motor_set_dir(0);
+            printf("Stepping 40:\n");
+            for (int step_i=0; step_i<40;step_i++){
+                sleep_us(6400);
+                gpio_put(PIN_MOTOR_STEP, 1);
+                sleep_us(5);
+                gpio_put(PIN_MOTOR_STEP, 0);
+            }
+
+            absolute_position +=40;
+
+            sleep_ms(1000);
+            printf("Finished stepping 40\n");
+
+            current_state = ACCURACY_TEST_POT;
             fflush(stdout);
             return;
         }
@@ -335,6 +348,7 @@ void motor_tick(void) {
             printf("%d\n", absolute_position);
             list[i][1] = absolute_position - zpositive_limit;
             sleep_ms(1000);
+
             i++;
             if (i >= 5) {
                 current_state = STATE_IDLE;
@@ -350,8 +364,22 @@ void motor_tick(void) {
                 }
                 printf("----------------------------\n");
             } else {
+
+                motor_set_dir(1);
+                printf("Stepping 40:\n");
+                for (int step_i=0; step_i<40;step_i++){
+                    sleep_us(6400);
+                    gpio_put(PIN_MOTOR_STEP, 1);
+                    sleep_us(5);
+                    gpio_put(PIN_MOTOR_STEP, 0);
+                }
+
+                absolute_position -=40;
+
+                sleep_ms(1000);
+                printf("Finished stepping 40\n");
+
                 current_state = ACCURACY_TEST_NOT;
-                motor_set_dir(0);
                 fflush(stdout);
                 return;
             }
