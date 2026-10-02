@@ -69,7 +69,7 @@ void accuracy_test(void) {
         fflush(stdout);
         return;
     }
-    current_state = ACCURACY_TEST_POT;
+    current_state = ACCURACY_TEST_NOT;
     printf("Starting accuracy test...\n");
     motor_set_dir(1);
     fflush(stdout);
