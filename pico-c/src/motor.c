@@ -156,6 +156,7 @@ static void motor_limit_isr(uint gpio, uint32_t events) {
         motor_disable();
         printf("Negative hardlimit hit! Motor disabled via Interrupt.\n");
         fflush(stdout);
+        return;
     }
     if (gpio == PIN_MOTOR_POT_HARDLIMIT) {
         target_steps = 0;
@@ -163,6 +164,7 @@ static void motor_limit_isr(uint gpio, uint32_t events) {
         motor_disable();
         printf("Positive hardlimit hit! Motor disabled via Interrupt.\n");
         fflush(stdout);
+        return;
     }
 }
 
