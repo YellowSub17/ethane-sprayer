@@ -150,7 +150,7 @@ void motor_disable(void) {
 
 
 static void motor_limit_isr(uint gpio, uint32_t events) {
-    if (gpio == PIN_MOTOR_NOT_HARDLIMIT) {
+    if (gpio == PIN_MOTOR_NOT_HARDLIMIT && motor_enabled) {
         target_steps = 0;
         current_state = STATE_IDLE;
         motor_disable();
@@ -158,7 +158,7 @@ static void motor_limit_isr(uint gpio, uint32_t events) {
         fflush(stdout);
         return;
     }
-    if (gpio == PIN_MOTOR_POT_HARDLIMIT) {
+    if (gpio == PIN_MOTOR_POT_HARDLIMIT && motor_enabled) {
         target_steps = 0;
         current_state = STATE_IDLE;
         motor_disable();
