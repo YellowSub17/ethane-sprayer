@@ -149,7 +149,7 @@ void motor_disable(void) {
 }
 
 
-static void motor_limit_isr(uint gpio, uint32_t events) {
+static void motor_limit_isr(uint gpio, uint32_t events) { //funky with pins 21 and 6 fluctuating
     if (gpio == PIN_MOTOR_NOT_HARDLIMIT && motor_enabled) {
         target_steps = 0;
         current_state = STATE_IDLE;
