@@ -70,6 +70,7 @@ void accuracy_test(void) {
         return;
     }
     current_state = ACCURACY_TEST_NOT;
+    i = 0; // Reset the index for the accuracy test results
     printf("Starting accuracy test...\n");
     motor_set_dir(1);
     fflush(stdout);
@@ -149,7 +150,7 @@ void motor_disable(void) {
 }
 
 
-static void motor_limit_isr(uint gpio, uint32_t events) { //funky with pins 21 and 6 fluctuating
+static void motor_limit_isr(uint gpio, uint32_t events) { //funky with pins 21 and 6 fluctuating, pot triggers not too, not doesn't have the same problem
     if (gpio == PIN_MOTOR_NOT_HARDLIMIT && motor_enabled) {
         target_steps = 0;
         current_state = STATE_IDLE;
@@ -180,7 +181,7 @@ void motor_reset(void) {
     znegative_limit = 0;
     zpositive_limit = 500;
     last_step_time = 0;
-
+    i = 0;
     current_dir = 0;
     gpio_put(PIN_MOTOR_DIR, 0);
     printf("Motor parameters reset. Re-home before moving.\n");
@@ -265,9 +266,6 @@ void motor_tick(void) {
             current_state = STATE_HOMING_POT;
             absolute_position +=40;
 
-
-
-
             return;
         }
 
@@ -317,21 +315,21 @@ void motor_tick(void) {
             sleep_ms(1000);
             motor_set_dir(0);
             printf("Stepping 40:\n");
+
             for (int step_i=0; step_i<40;step_i++){
                 sleep_us(6400);
                 gpio_put(PIN_MOTOR_STEP, 1);
                 sleep_us(5);
                 gpio_put(PIN_MOTOR_STEP, 0);
-                printf("Step x: %d\n", step_i);
             }
             printf("Stepping done\n");
 
-            absolute_position +=40;
-
+            now = time_us_64(); // Reset the timer to avoid immediate stepping in the next state
+            last_step_time = now;
             sleep_ms(1000);
-            printf("Finished stepping 40\n");
 
             current_state = ACCURACY_TEST_POT;
+            absolute_position +=40;
             fflush(stdout);
             return;
         }
@@ -379,7 +377,8 @@ void motor_tick(void) {
                 }
 
                 absolute_position -=40;
-
+                now = time_us_64(); // Reset the timer to avoid immediate stepping in the next state
+                last_step_time = now;
                 sleep_ms(1000);
                 printf("Finished stepping 40\n");
 
