@@ -320,7 +320,9 @@ void motor_tick(void) {
                 gpio_put(PIN_MOTOR_STEP, 1);
                 sleep_us(5);
                 gpio_put(PIN_MOTOR_STEP, 0);
+                prinf("Step x: %d\n", step_i);
             }
+            printf("Stepping done\n");
 
             absolute_position +=40;
 
