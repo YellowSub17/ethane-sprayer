@@ -309,7 +309,7 @@ void motor_tick(void) {
     }
         // Accuracy test state machine
     if (current_state == ACCURACY_TEST_NOT) {
-        if (gpio_get(PIN_MOTOR_NOT) == 0) {
+        if (gpio_get(PIN_MOTOR_NOT) == 1) {
             printf("%d\n", absolute_position);
             list[i][0] = absolute_position;
             sleep_ms(1000);
@@ -346,7 +346,7 @@ void motor_tick(void) {
     }
 
     if (current_state == ACCURACY_TEST_POT) {
-        if (gpio_get(PIN_MOTOR_POT) == 0) {
+        if (gpio_get(PIN_MOTOR_POT) == 1) {
             printf("%d\n", absolute_position);
             list[i][1] = absolute_position - zpositive_limit;
             sleep_ms(1000);
