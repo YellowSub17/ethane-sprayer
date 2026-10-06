@@ -189,8 +189,8 @@ void motor_reset(void) {
 }
 
 void step_time(int time) {      // Set the delay between steps in microseconds
-    if (time < 500 || time > 10000) {
-        printf("ERROR: invalid step time: 500<steptime<10,000\n");
+    if (time < 200 || time > 10000) {
+        printf("ERROR: invalid step time: 200<steptime<10,000\n");
         fflush(stdout);
         return;
     }
