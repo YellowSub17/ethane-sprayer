@@ -215,11 +215,11 @@ void motor_init(void) {
 
     gpio_init(PIN_MOTOR_POT);
     gpio_set_dir(PIN_MOTOR_POT, GPIO_IN);
-    gpio_pull_up(PIN_MOTOR_POT);
+    gpio_pull_down(PIN_MOTOR_POT);
 
     gpio_init(PIN_MOTOR_NOT);
     gpio_set_dir(PIN_MOTOR_NOT, GPIO_IN);
-    gpio_pull_up(PIN_MOTOR_NOT);
+    gpio_pull_down(PIN_MOTOR_NOT);
 
     gpio_init(PIN_MOTOR_POT_HARDLIMIT);
     gpio_set_dir(PIN_MOTOR_POT_HARDLIMIT, GPIO_IN);
@@ -244,7 +244,7 @@ void motor_tick(void) {
 
     if (current_state == STATE_HOMING_NOT) {
 
-        if (gpio_get(PIN_MOTOR_NOT) == 0) {
+        if (gpio_get(PIN_MOTOR_NOT) == 1) {
             sleep_ms(1000);
             absolute_position=0;
             printf("Finished Homing NOT\n");
@@ -279,7 +279,7 @@ void motor_tick(void) {
     }
 
     if (current_state == STATE_HOMING_POT) {
-        if (gpio_get(PIN_MOTOR_POT) == 0) {
+        if (gpio_get(PIN_MOTOR_POT) == 1) {
             target_steps = 0;
             current_state = STATE_IDLE;
             zpositive_limit = absolute_position;
