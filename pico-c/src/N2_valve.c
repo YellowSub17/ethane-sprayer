@@ -34,7 +34,7 @@ void N2_valve_var(int time1, int time2){
     gpio_put(PIN_VALVE_3, 1);
     sleep_ms(time1);
     gpio_put(PIN_VALVE_3, 0);
-    sleep_ms(1);
+    sleep_ms(2);
     gpio_put(PIN_VALVE_3, 1);
     sleep_ms(time2);
     gpio_put(PIN_VALVE_3, 0);
