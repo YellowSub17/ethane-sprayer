@@ -64,6 +64,8 @@ int main() {
 
     char buffer[64];
     int val = 0;
+    int val1 = 0;
+    int val2 = 0;
 
     while (true) {
         // Service serial commands non-blockingly
