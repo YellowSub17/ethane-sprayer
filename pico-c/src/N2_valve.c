@@ -29,13 +29,17 @@ void N2_valve(void){
     printf("N2 valve open\n");
 }
 
-void N2_valve_var(int time){
+void N2_valve_var(int time1, int time2){
     printf("N2 valve open\n");
     gpio_put(PIN_VALVE_3, 1);
-    sleep_ms(time);
+    sleep_ms(time1);
+    gpio_put(PIN_VALVE_3, 0);
+    sleep_ms(1)
+    gpio_put(PIN_VALVE_3, 1);
+    sleep_ms(time2);
     gpio_put(PIN_VALVE_3, 0);
     printf("N2 valve closing\n");
-    sleep_ms(100);
+    fflush(stdout);
 }
 
 void N2_valve_tick(void){
