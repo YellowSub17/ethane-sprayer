@@ -39,6 +39,7 @@ void isr_systick();
 void pio_irq_handler();
 void init_cycle_counter();
 void photodiode_init();
+int jet_timing_sequence(uint32_t open_us, uint32_t timeout_ms);
 int measure_gatesABC();
 int measure_gatesAB();
 

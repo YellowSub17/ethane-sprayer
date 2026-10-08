@@ -119,6 +119,16 @@ int main() {
                 val2 = atoi(buffer + 12); // Skip the 10 characters of "VALVETIME=" and convert the rest
                 N2_valve_var(val1, val2);
             }
+            else if (strncmp(buffer, "JET_TIMING_SEQUENCE", 19) == 0) {
+                uint32_t open_us = 3000, timeout_ms = 100;   // standardvärden
+                char *colon = strchr(buffer, ':');
+                if (colon) {
+                    char *comma = strchr(colon, ',');
+                    open_us = atoi(colon + 1);
+                if (comma) timeout_ms = atoi(comma + 1);
+                }
+                jet_timing_sequence(open_us, timeout_ms);
+            }
         }
         sleep_us(100);
     }

@@ -5,6 +5,7 @@
 #include "hardware/structs/systick.h"
 #include "hardware/irq.h"
 #include "laser_timer.pio.h"
+#include "hardware/clocks.h"
 
 #include "pins.h"
 #include "../main.h"
@@ -43,21 +44,27 @@ static inline uint32_t get_cycle32() {
 void pio_irq_handler() {
     // Check Gate A (SM0)
     if (!pio_sm_is_rx_fifo_empty(pio0, 0)) {
-        tick_a = get_cycle32();
+         if (!gate_a_hit) {             //only saves the first hit now
+            tick_a = get_cycle32();
+            gate_a_hit = true;
+        }
         pio_sm_get(pio0, 0);
-        gate_a_hit = true;
     }
     // Check Gate B (SM1)
     if (!pio_sm_is_rx_fifo_empty(pio0, 1)) {
-        tick_b = get_cycle32();
+         if (!gate_b_hit) {
+            tick_b = get_cycle32();
+            gate_b_hit = true;
+        }
         pio_sm_get(pio0, 1);
-        gate_b_hit = true;
     }
     // Check Gate C (SM2)
     if (!pio_sm_is_rx_fifo_empty(pio0, 2)) {
-        tick_c = get_cycle32(); // FIXED: captured to tick_c
+         if (!gate_c_hit) {
+            tick_c = get_cycle32();
+            gate_c_hit = true;
+        }                            // FIXED: captured to tick_c
         pio_sm_get(pio0, 2);    // FIXED: drained SM2 FIFO
-        gate_c_hit = true;
     }
 }
 
@@ -121,6 +128,41 @@ void photodiode_init() {
     pio_sm_clear_fifos(pio, 0);
     pio_sm_clear_fifos(pio, 1);
     pio_sm_clear_fifos(pio, 2);
+}
+
+        //prototype jet timing sequence
+int jet_timing_sequence(uint32_t open_us, uint32_t timeout_ms) {
+    if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
+
+    // arm gates and clear the fifos from previous run
+    gate_a_hit = gate_b_hit = gate_c_hit = false;
+    for (int sm = 0; sm < 3; sm++) pio_sm_clear_fifos(pio0, sm);
+    init_cycle_counter();
+
+    // Exakt ventilpuls
+    uint32_t t0 = time_us_32();
+    gpio_put(PIN_VALVE_3, 1);
+    while ((uint32_t)(time_us_32() - t0) < open_us) tight_loop_contents(); //should work better than sleep_ms apparently
+    gpio_put(PIN_VALVE_3, 0);
+
+    // wait for gates to be hit or timeout (1s default)
+    uint32_t timeout_us = timeout_ms * 1000;
+    while (!(gate_a_hit && gate_b_hit && gate_c_hit) &&
+           (uint32_t)(time_us_32() - t0) < timeout_us) {
+        tight_loop_contents();
+    }
+
+    double ns_per_cycle = 1e9 / clock_get_hz(clk_sys);
+    if (gate_a_hit && gate_b_hit && gate_c_hit) {
+        uint32_t AB = tick_b - tick_a;
+        uint32_t BC = tick_c - tick_b;
+        printf("JET_RESULT A_to_B=%u B_to_C=%u cycles ns_per_cycle=%.3f A_to_B_ns=%.1f B_to_C_ns=%.1f\n",
+               AB, BC, ns_per_cycle, AB * ns_per_cycle, BC * ns_per_cycle);
+    } else {
+        printf("JET_TIMEOUT hitA=%d hitB=%d hitC=%d\n", gate_a_hit, gate_b_hit, gate_c_hit);
+    }
+    stdio_flush();
+    return 0;
 }
 
 int measure_gatesABC() {
