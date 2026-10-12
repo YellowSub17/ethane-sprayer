@@ -130,8 +130,12 @@ void motor_stop(void) {
 
 bool motor_enable(void) {
 
-    if (gpio_get(PIN_MOTOR_POT_HARDLIMIT) == 0 || gpio_get(PIN_MOTOR_NOT_HARDLIMIT) == 0) {
-        printf("Cannot enable motor: Hard limit switch is currently depressed!\n");
+    if (gpio_get(PIN_MOTOR_POT_HARDLIMIT) == 0 ) {
+        printf("Cannot enable motor: Hard limit POT switch is currently depressed!\n");
+        fflush(stdout);
+        return false; // Enable failed
+    } else if (gpio_get(PIN_MOTOR_NOT_HARDLIMIT) == 0) {
+        printf("Cannot enable motor: Hard limit NOT switch is currently depressed!\n");
         fflush(stdout);
         return false; // Enable failed
     }
