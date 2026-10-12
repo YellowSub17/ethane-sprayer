@@ -1,250 +1,164 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
-#include "hardware/exception.h"
-#include "hardware/structs/systick.h"
-#include "hardware/irq.h"
-#include "laser_timer.pio.h"
 #include "hardware/clocks.h"
+#include "laser_timer.pio.h"
 
 #include "pins.h"
 #include "../main.h"
 
-// Direct raw vector assignment for Cortex-M SysTick Exception (Vector Index 15)
-#include "hardware/structs/scb.h"
+// Each gate has its own PIO state machine running laser_gate. The SM keeps a
+// down-counter in X (one tick every 2 sys cycles) and pushes it to its RX FIFO
+// when the beam breaks, so timestamps are taken in hardware with no interrupt
+// latency. gates_arm() resets all counters to the same value and starts the
+// SMs in sync, which makes the timestamps from different gates comparable.
 
-static volatile uint32_t systick_overflows = 0;
+#define NUM_GATES        3
+#define CYCLES_PER_TICK  2      // cycles per X decrement in laser_gate
 
-static volatile uint32_t tick_a = 0;
-static volatile uint32_t tick_b = 0;
-static volatile uint32_t tick_c = 0;
-
-static volatile bool gate_a_hit = false;
-static volatile bool gate_b_hit = false;
-static volatile bool gate_c_hit = false;
-
-// SysTick Rollover ISR: Increments every ~134.22 ms
-void isr_systick() {
-    systick_overflows++;
-}
-
-// Extension function to compute continuous 32-bit up-counting cycles (8 ns resolution)
-static inline uint32_t get_cycle32() {
-    uint32_t overflows = systick_overflows;
-    uint32_t cvr = systick_hw->cvr;
-
-    // Handle wrap-around race condition if ISR hasn't executed yet
-    if ((systick_hw->csr & M0PLUS_SYST_CSR_COUNTFLAG_BITS) && (cvr > 0x7FFFFF)) {
-        overflows++;
-    }
-
-    return (overflows << 24) | (0x00FFFFFF - cvr);
-}
-
-void pio_irq_handler() {
-    // Check Gate A (SM0)
-    if (!pio_sm_is_rx_fifo_empty(pio0, 0)) {
-         if (!gate_a_hit) {             //only saves the first hit now
-            tick_a = get_cycle32();
-            gate_a_hit = true;
-        }
-        pio_sm_get(pio0, 0);
-    }
-    // Check Gate B (SM1)
-    if (!pio_sm_is_rx_fifo_empty(pio0, 1)) {
-         if (!gate_b_hit) {
-            tick_b = get_cycle32();
-            gate_b_hit = true;
-        }
-        pio_sm_get(pio0, 1);
-    }
-    // Check Gate C (SM2)
-    if (!pio_sm_is_rx_fifo_empty(pio0, 2)) {
-         if (!gate_c_hit) {
-            tick_c = get_cycle32();
-            gate_c_hit = true;
-        }                            // FIXED: captured to tick_c
-        pio_sm_get(pio0, 2);    // FIXED: drained SM2 FIFO
-    }
-}
-
-
-
-#include "pico/platform.h"
-void init_cycle_counter() {
-    systick_overflows = 0;
-    systick_hw->rvr = 0x00FFFFFF;
-    systick_hw->cvr = 0;
-
-    // Set the SysTick interrupt handler
-    exception_set_exclusive_handler(SYSTICK_EXCEPTION, isr_systick);
-    // Enable Counter, Interrupts, and CPU Clock Source
-    systick_hw->csr = M0PLUS_SYST_CSR_ENABLE_BITS |
-                      M0PLUS_SYST_CSR_CLKSOURCE_BITS |
-                      M0PLUS_SYST_CSR_TICKINT_BITS;
-}
+static const PIO gate_pio = pio0;
+static const uint gate_pins[NUM_GATES] = {
+    PIN_PHOTO_DIODE_1,  // Gate A, SM0
+    PIN_PHOTO_DIODE_2,  // Gate B, SM1
+    PIN_PHOTO_DIODE_3,  // Gate C, SM2
+};
+static const uint gate_sm_mask = (1u << NUM_GATES) - 1;
+static uint gate_offset;
 
 void photodiode_init() {
-    PIO pio = pio0;
-    uint offset = pio_add_program(pio, &laser_gate_program);
+    gate_offset = pio_add_program(gate_pio, &laser_gate_program);
 
-    gpio_pull_up(PIN_PHOTO_DIODE_1);
-    gpio_pull_up(PIN_PHOTO_DIODE_2);
-    gpio_pull_up(PIN_PHOTO_DIODE_3);
+    for (uint sm = 0; sm < NUM_GATES; sm++) {
+        uint pin = gate_pins[sm];
+        gpio_pull_up(pin);
+        pio_gpio_init(gate_pio, pin);
+        pio_sm_claim(gate_pio, sm);
+        pio_sm_set_consecutive_pindirs(gate_pio, sm, pin, 1, false);
 
-    // Setup SM0 (Gate A)
-    pio_gpio_init(pio, PIN_PHOTO_DIODE_1);
-    pio_sm_set_consecutive_pindirs(pio, 0, PIN_PHOTO_DIODE_1, 1, false);
-    pio_sm_config c0 = laser_gate_program_get_default_config(offset);
-    sm_config_set_in_pins(&c0, PIN_PHOTO_DIODE_1);
-    pio_sm_init(pio, 0, offset, &c0);
-
-    // Setup SM1 (Gate B)
-    pio_gpio_init(pio, PIN_PHOTO_DIODE_2);
-    pio_sm_set_consecutive_pindirs(pio, 1, PIN_PHOTO_DIODE_2, 1, false);
-    pio_sm_config c1 = laser_gate_program_get_default_config(offset);
-    sm_config_set_in_pins(&c1, PIN_PHOTO_DIODE_2);
-    pio_sm_init(pio, 1, offset, &c1);
-
-    // Setup SM2 (Gate C)
-    pio_gpio_init(pio, PIN_PHOTO_DIODE_3);
-    pio_sm_set_consecutive_pindirs(pio, 2, PIN_PHOTO_DIODE_3, 1, false);
-    pio_sm_config c2 = laser_gate_program_get_default_config(offset);
-    sm_config_set_in_pins(&c2, PIN_PHOTO_DIODE_3); // FIXED: applied c2 config
-    pio_sm_init(pio, 2, offset, &c2);
-
-    // Enable RX FIFO Interrupts
-    pio_set_irq0_source_enabled(pio, pis_sm0_rx_fifo_not_empty, true);
-    pio_set_irq0_source_enabled(pio, pis_sm1_rx_fifo_not_empty, true);
-    pio_set_irq0_source_enabled(pio, pis_sm2_rx_fifo_not_empty, true);
-    irq_set_exclusive_handler(PIO0_IRQ_0, pio_irq_handler);
-    irq_set_enabled(PIO0_IRQ_0, true);
-
-    // Start State Machines synchronously
-    pio_enable_sm_mask_in_sync(pio, (1u << 0) | (1u << 1) | (1u << 2));
-
-    // Clear startup noise
-    sleep_ms(10);
-    pio_sm_clear_fifos(pio, 0);
-    pio_sm_clear_fifos(pio, 1);
-    pio_sm_clear_fifos(pio, 2);
+        pio_sm_config c = laser_gate_program_get_default_config(gate_offset);
+        sm_config_set_in_pins(&c, pin);
+        sm_config_set_jmp_pin(&c, pin);
+        sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
+        pio_sm_init(gate_pio, sm, gate_offset, &c);
+    }
 }
 
-        //prototype jet timing sequence
-int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
+// Reset every gate's counter to 0xFFFFFFFF and start all SMs on the same cycle.
+// Each SM first waits for its beam to be present, so a gate that is already
+// blocked when armed is only captured on its next break.
+static void gates_arm(void) {
+    pio_set_sm_mask_enabled(gate_pio, gate_sm_mask, false);
+    for (uint sm = 0; sm < NUM_GATES; sm++) {
+        pio_sm_clear_fifos(gate_pio, sm);
+        pio_sm_restart(gate_pio, sm);
+        pio_sm_exec(gate_pio, sm, pio_encode_mov_not(pio_x, pio_null));
+        pio_sm_exec(gate_pio, sm, pio_encode_jmp(gate_offset + laser_gate_offset_wait_high));
+    }
+    pio_enable_sm_mask_in_sync(gate_pio, gate_sm_mask);
+}
+
+// Wait until every gate in `want` has fired, or timeout_us has passed since
+// `start_us` (timeout_us == 0 waits forever). Stores the first timestamp of
+// each gate in ts[] and returns the mask of gates that fired.
+static uint gates_wait(uint want, uint32_t start_us, uint32_t timeout_us, uint32_t ts[NUM_GATES]) {
+    uint hit = 0;
+    while ((hit & want) != want) {
+        for (uint sm = 0; sm < NUM_GATES; sm++) {
+            if (!(hit & (1u << sm)) && !pio_sm_is_rx_fifo_empty(gate_pio, sm)) {
+                ts[sm] = pio_sm_get(gate_pio, sm);
+                hit |= 1u << sm;
+            }
+        }
+        if (timeout_us && (uint32_t)(time_us_32() - start_us) >= timeout_us) break;
+    }
+    return hit;
+}
+
+// Cycles from gate `from` to gate `to`. X counts down, so a later hit has a
+// smaller value. Negative means `to` fired first. Valid for |delay| < ~34 s.
+static int64_t gate_delay_cycles(const uint32_t ts[NUM_GATES], uint from, uint to) {
+    return (int64_t)(int32_t)(ts[from] - ts[to]) * CYCLES_PER_TICK;
+}
+
+static double ns_per_cycle(void) {
+    return 1e9 / clock_get_hz(clk_sys);
+}
+
+// Pulse the N2 valve for open_us (exact busy-wait, max 20 ms)
+static uint32_t pulse_valve(uint32_t open_us) {
     if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
-
-    // arm gates and clear the fifos from previous run
-    gate_a_hit = gate_b_hit = gate_c_hit = false;
-    for (int sm = 0; sm < 3; sm++) pio_sm_clear_fifos(pio0, sm);
-    init_cycle_counter();
-
-    // Exakt ventilpuls
     uint32_t t0 = time_us_32();
     gpio_put(PIN_VALVE_3, 1);
     while ((uint32_t)(time_us_32() - t0) < open_us) tight_loop_contents(); //should work better than sleep_ms apparently
     gpio_put(PIN_VALVE_3, 0);
+    return t0;
+}
 
-    // wait for gates to be hit or timeout (1s default)
-    uint32_t timeout_us = timeout_ms * 1000;
-    while (!(gate_a_hit && gate_b_hit) &&
-           (uint32_t)(time_us_32() - t0) < timeout_us) {
-        tight_loop_contents();
-    }
+        //prototype jet timing sequence
+int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
+    uint32_t ts[NUM_GATES];
+    gates_arm();
+    uint32_t t0 = pulse_valve(open_us);
+    uint hit = gates_wait(0b011, t0, timeout_ms * 1000, ts);
 
-    double ns_per_cycle = 1e9 / clock_get_hz(clk_sys);
-    if (gate_a_hit && gate_b_hit) {
-        uint32_t AB = tick_b - tick_a;
-        printf("JET_RESULT:\tA_to_B=%u cycles\tA_to_B_ns=%.1f\ttick_a=%u\ttick_b=%u\n",
-               AB, AB * ns_per_cycle, tick_a, tick_b);
+    if ((hit & 0b011) == 0b011) {
+        int64_t AB = gate_delay_cycles(ts, 0, 1);
+        printf("JET_RESULT:\tA_to_B=%lld cycles\tA_to_B_ns=%.1f\n",
+               AB, AB * ns_per_cycle());
     } else {
-        printf("JET_TIMEOUT hitA=%d hitB=%d\n", gate_a_hit, gate_b_hit);
+        printf("JET_TIMEOUT hitA=%d hitB=%d\n", !!(hit & 1), !!(hit & 2));
     }
     stdio_flush();
     return 0;
 }
 
-
         //prototype jet timing sequence
 int jet_timing_sequence(uint32_t open_us, uint32_t timeout_ms) {
-    if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
+    uint32_t ts[NUM_GATES];
+    gates_arm();
+    uint32_t t0 = pulse_valve(open_us);
+    uint hit = gates_wait(0b111, t0, timeout_ms * 1000, ts);
 
-    // arm gates and clear the fifos from previous run
-    gate_a_hit = gate_b_hit = gate_c_hit = false;
-    for (int sm = 0; sm < 3; sm++) pio_sm_clear_fifos(pio0, sm);
-    init_cycle_counter();
-
-    // Exakt ventilpuls
-    uint32_t t0 = time_us_32();
-    gpio_put(PIN_VALVE_3, 1);
-    while ((uint32_t)(time_us_32() - t0) < open_us) tight_loop_contents(); //should work better than sleep_ms apparently
-    gpio_put(PIN_VALVE_3, 0);
-
-    // wait for gates to be hit or timeout (1s default)
-    uint32_t timeout_us = timeout_ms * 1000;
-    while (!(gate_a_hit && gate_b_hit && gate_c_hit) &&
-           (uint32_t)(time_us_32() - t0) < timeout_us) {
-        tight_loop_contents();
-    }
-
-    double ns_per_cycle = 1e9 / clock_get_hz(clk_sys);
-    if (gate_a_hit && gate_b_hit && gate_c_hit) {
-        uint32_t AB = tick_b - tick_a;
-        uint32_t BC = tick_c - tick_b;
-        printf("JET_RESULT A_to_B=%u B_to_C=%u cycles ns_per_cycle=%.3f A_to_B_ns=%.1f B_to_C_ns=%.1f\n",
-               AB, BC, ns_per_cycle, AB * ns_per_cycle, BC * ns_per_cycle);
+    if (hit == 0b111) {
+        double ns = ns_per_cycle();
+        int64_t AB = gate_delay_cycles(ts, 0, 1);
+        int64_t BC = gate_delay_cycles(ts, 1, 2);
+        printf("JET_RESULT A_to_B=%lld B_to_C=%lld cycles ns_per_cycle=%.3f A_to_B_ns=%.1f B_to_C_ns=%.1f\n",
+               AB, BC, ns, AB * ns, BC * ns);
     } else {
-        printf("JET_TIMEOUT hitA=%d hitB=%d hitC=%d\n", gate_a_hit, gate_b_hit, gate_c_hit);
+        printf("JET_TIMEOUT hitA=%d hitB=%d hitC=%d\n", !!(hit & 1), !!(hit & 2), !!(hit & 4));
     }
     stdio_flush();
     return 0;
 }
 
 int measure_gatesABC() {
-    init_cycle_counter();
+    uint32_t ts[NUM_GATES];
+    gates_arm();
+    gates_wait(0b111, 0, 0, ts);    // waits forever
 
-    while (!gate_a_hit || !gate_b_hit || !gate_c_hit) {
-        // waiting for all gates
-    }
+    double ns = ns_per_cycle();
+    int64_t diffBA = gate_delay_cycles(ts, 0, 1);
+    int64_t diffCB = gate_delay_cycles(ts, 1, 2);
 
-    // Standard 32-bit unsigned subtraction auto-handles up to 34.3s delta
-    uint32_t diffBA = tick_b - tick_a;
-    uint32_t diffCB = tick_c - tick_b;
-
-    double ns_deltaBA = (double)diffBA * 8.0;
-    double ns_deltaCB = (double)diffCB * 8.0;
-
-    printf("A-to-B Delta: %u cycles\t%.2f ns\t(%.3f us)\n",
-           diffBA, ns_deltaBA, ns_deltaBA / 1000.0);
+    printf("A-to-B Delta: %lld cycles\t%.2f ns\t(%.3f us)\n",
+           diffBA, diffBA * ns, diffBA * ns / 1000.0);
+    printf("B-to-C Delta: %lld cycles\t%.2f ns\t(%.3f us)\n",
+           diffCB, diffCB * ns, diffCB * ns / 1000.0);
     stdio_flush();
-
-    printf("B-to-C Delta: %u cycles\t%.2f ns\t(%.3f us)\n",
-           diffCB, ns_deltaCB, ns_deltaCB / 1000.0);
-    stdio_flush();
-
-    gate_a_hit = false;
-    gate_b_hit = false;
-    gate_c_hit = false;
-
     return 0;
 }
 
 int measure_gatesAB() {
-    init_cycle_counter();
+    uint32_t ts[NUM_GATES];
+    gates_arm();
+    gates_wait(0b011, 0, 0, ts);    // waits forever
 
-    while (!gate_a_hit || !gate_b_hit) {
-        // waiting for gates A and B
-    }
+    double ns = ns_per_cycle();
+    int64_t diffBA = gate_delay_cycles(ts, 0, 1);
 
-    uint32_t diffBA = tick_b - tick_a;
-    double ns_deltaBA = (double)diffBA * 8.0;
-
-    printf("A-to-B Delta: %u cycles\t%.2f ns\t%.3f us\t%.6f s\t A:%d\tB:%d\n",
-           diffBA, ns_deltaBA, ns_deltaBA / 1000.0, ns_deltaBA/1000000.0, tick_a, tick_b);
+    printf("A-to-B Delta: %lld cycles\t%.2f ns\t%.3f us\t%.6f s\n",
+           diffBA, diffBA * ns, diffBA * ns / 1000.0, diffBA * ns / 1e9);
     stdio_flush();
-
-    gate_a_hit = false;
-    gate_b_hit = false;
-
     return 0;
 }
