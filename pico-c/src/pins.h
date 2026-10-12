@@ -22,10 +22,11 @@
 #define PIN_MOTOR_NOT_HARDLIMIT   12 //negative over travel switch
 #define PIN_MOTOR_POT_HARDLIMIT    13//positive over travel switch
 
-#define PIN_VALVE_1            22 //Valve 1 control pin
-#define PIN_VALVE_3            7 //N2 release valve control pin
+#define PIN_VALVE_1            20 //Valve 1 control pin
+#define PIN_VALVE_3            21 //N2 release valve control piN
 
 
 // --- System & Diagnostics ---
 #define PIN_PICO_LED      25
+
 

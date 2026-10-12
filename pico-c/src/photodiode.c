@@ -131,6 +131,41 @@ void photodiode_init() {
 }
 
         //prototype jet timing sequence
+int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
+    if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
+
+    // arm gates and clear the fifos from previous run
+    gate_a_hit = gate_b_hit = gate_c_hit = false;
+    for (int sm = 0; sm < 3; sm++) pio_sm_clear_fifos(pio0, sm);
+    init_cycle_counter();
+
+    // Exakt ventilpuls
+    uint32_t t0 = time_us_32();
+    gpio_put(PIN_VALVE_3, 1);
+    while ((uint32_t)(time_us_32() - t0) < open_us) tight_loop_contents(); //should work better than sleep_ms apparently
+    gpio_put(PIN_VALVE_3, 0);
+
+    // wait for gates to be hit or timeout (1s default)
+    uint32_t timeout_us = timeout_ms * 1000;
+    while (!(gate_a_hit && gate_b_hit) &&
+           (uint32_t)(time_us_32() - t0) < timeout_us) {
+        tight_loop_contents();
+    }
+
+    double ns_per_cycle = 1e9 / clock_get_hz(clk_sys);
+    if (gate_a_hit && gate_b_hit && gate_c_hit) {
+        uint32_t AB = tick_b - tick_a;
+        printf("JET_RESULT A_to_B=%u cycles ns_per_cycle=%.3f A_to_B_ns=%.1f\n",
+               AB, ns_per_cycle, AB * ns_per_cycle );
+    } else {
+        printf("JET_TIMEOUT hitA=%d hitB=%d\n", gate_a_hit, gate_b_hit);
+    }
+    stdio_flush();
+    return 0;
+}
+
+
+        //prototype jet timing sequence
 int jet_timing_sequence(uint32_t open_us, uint32_t timeout_ms) {
     if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
 

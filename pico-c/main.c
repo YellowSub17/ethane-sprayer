@@ -100,7 +100,7 @@ int main() {
             else if (strcmp(buffer, "MOTOR:RESET") == 0) {
                 motor_reset();
             }
-            else if (strncmp(buffer, "STEPTIME:", 9) == 0){ 
+            else if (strncmp(buffer, "STEPTIME:", 9) == 0){
                 val = atoi(buffer + 9); // Skip the 9 characters of "STEPTIME:=" and convert the rest
                 step_time(val);
             }
@@ -129,6 +129,17 @@ int main() {
                 }
                 jet_timing_sequence(open_us, timeout_ms);
             }
+            else if (strncmp(buffer, "JTAB", 4) == 0) {
+                uint32_t open_us = 10000, timeout_ms = 10000;   // standardvärden
+                char *colon = strchr(buffer, ':');
+                if (colon) {
+                    char *comma = strchr(colon, ',');
+                    open_us = atoi(colon + 1);
+                if (comma) timeout_ms = atoi(comma + 1);
+                }
+                jet_timing_sequence(open_us, timeout_ms);
+            }
+
         }
         sleep_us(100);
     }
