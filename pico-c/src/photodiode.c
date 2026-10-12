@@ -103,8 +103,8 @@ int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
 
     if ((hit & 0b011) == 0b011) {
         int64_t AB = gate_delay_cycles(ts, 0, 1);
-        printf("JET_RESULT:\tA_to_B=%lld cycles\tA_to_B_ns=%.1f\n",
-               AB, AB * ns_per_cycle());
+        printf("JET_RESULT:\tA_to_B=%lld cycles\tA_to_B_ns=%.1f\tABus=%.6fms\n",
+               AB, AB * ns_per_cycle(), AB*ns_per_cycle()*1e6);
     } else {
         printf("JET_TIMEOUT hitA=%d hitB=%d\n", !!(hit & 1), !!(hit & 2));
     }
