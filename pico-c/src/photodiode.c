@@ -155,8 +155,8 @@ int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
     double ns_per_cycle = 1e9 / clock_get_hz(clk_sys);
     if (gate_a_hit && gate_b_hit) {
         uint32_t AB = tick_b - tick_a;
-        printf("JET_RESULT A_to_B=%u cycles ns_per_cycle=%.3f A_to_B_ns=%.1f\n",
-               AB, ns_per_cycle, AB * ns_per_cycle );
+        printf("JET_RESULT:\tA_to_B=%u cycles\tA_to_B_ns=%.1f\ttick_a=%u\ttick_b=%u\n",
+               AB, AB * ns_per_cycle, tick_a, tick_b);
     } else {
         printf("JET_TIMEOUT hitA=%d hitB=%d\n", gate_a_hit, gate_b_hit);
     }
@@ -239,8 +239,8 @@ int measure_gatesAB() {
     uint32_t diffBA = tick_b - tick_a;
     double ns_deltaBA = (double)diffBA * 8.0;
 
-    printf("A-to-B Delta: %u cycles\t%.2f ns\t(%.3f us)\n",
-           diffBA, ns_deltaBA, ns_deltaBA / 1000.0);
+    printf("A-to-B Delta: %u cycles\t%.2f ns\t%.3f us\t%.6f s\t A:%d\tB:%d\n",
+           diffBA, ns_deltaBA, ns_deltaBA / 1000.0, ns_deltaBA/1000000.0, tick_a, tick_b);
     stdio_flush();
 
     gate_a_hit = false;
