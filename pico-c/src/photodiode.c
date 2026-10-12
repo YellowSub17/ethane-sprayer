@@ -153,7 +153,7 @@ int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
     }
 
     double ns_per_cycle = 1e9 / clock_get_hz(clk_sys);
-    if (gate_a_hit && gate_b_hit && gate_c_hit) {
+    if (gate_a_hit && gate_b_hit) {
         uint32_t AB = tick_b - tick_a;
         printf("JET_RESULT A_to_B=%u cycles ns_per_cycle=%.3f A_to_B_ns=%.1f\n",
                AB, ns_per_cycle, AB * ns_per_cycle );

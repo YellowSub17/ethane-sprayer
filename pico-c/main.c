@@ -137,7 +137,7 @@ int main() {
                     open_us = atoi(colon + 1);
                 if (comma) timeout_ms = atoi(comma + 1);
                 }
-                jet_timing_sequence(open_us, timeout_ms);
+                jet_timing_sequence_AB(open_us, timeout_ms);
             }
 
         }
