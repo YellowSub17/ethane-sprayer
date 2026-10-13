@@ -133,6 +133,8 @@ void photodiode_init() {
         //prototype jet timing sequence
 int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
     if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
+    laser_onoff(1); // Ensure laser is on for the timing sequence
+    sleep_ms(10); // Allow time for the laser to stabilize
 
     // arm gates and clear the fifos from previous run
     gate_a_hit = gate_b_hit = gate_c_hit = false;
@@ -160,6 +162,7 @@ int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
     } else {
         printf("JET_TIMEOUT hitA=%d hitB=%d\n", gate_a_hit, gate_b_hit);
     }
+    laser_onoff(0); // Turn off the laser after the timing sequence
     stdio_flush();
     return 0;
 }
