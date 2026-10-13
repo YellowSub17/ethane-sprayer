@@ -1,7 +1,32 @@
 .program laser_gate
+; Timestamping laser gate. Pin is HIGH while the beam hits the photodiode
+; and LOW while it is blocked. The jmp pin must be the photodiode pin.
+;
+; X is a free-running down-counter: every path through the program is an
+; alternating pair of (A: any instr, B: jmp x--), so X decrements exactly
+; once every 2 cycles regardless of the pin state. All SMs are armed by the
+; CPU with X = 0xFFFFFFFF and started in sync, so X is a shared time base:
+;   delay A->B [cycles] = 2 * (x_a - x_b)
+;
+; Every "jmp x--" targets the next instruction (or wraps to it), so the
+; fall-through when X hits 0 takes the same path and X just wraps around.
+;
+; The CPU arms the SM by exec'ing "mov x, ~null" + "jmp wait_high", so we
+; never capture a gate that was already blocked when armed.
 
+was_high:
+    jmp x--, wait_low       ; B
+wait_low:                   ; beam present, wait for it to break
+    jmp pin, was_high       ; A  still high -> keep counting
+    jmp x--, capture        ; B  beam broken
+capture:
+    mov isr, x              ; A  timestamp
+    jmp x--, do_push        ; B
+do_push:
+    push noblock            ; A
+    jmp x--, wait_high      ; B
 .wrap_target
-    wait 0 pin 0        ; Block until pin goes LOW (Laser pulse / break)
-    push noblock        ; Capture timestamp immediately to FIFO
-    wait 1 pin 0        ; Wait for pin to return HIGH before resetting loop
+public wait_high:           ; beam blocked, wait for it to return
+    jmp pin, was_high       ; A
+    jmp x--, wait_high      ; B  (fall-through wraps to wait_high)
 .wrap
