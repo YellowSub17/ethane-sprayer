@@ -87,8 +87,6 @@ static double ns_per_cycle(void) {
 // Pulse the N2 valve for open_us (exact busy-wait, max 20 ms)
 static uint32_t pulse_valve(uint32_t open_us) {
     if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
-    laser_onoff(1); // Ensure laser is on for the timing sequence
-    sleep_ms(10); // Allow time for the laser to stabilize
 
     // arm gates and clear the fifos from previous run
     gate_a_hit = gate_b_hit = gate_c_hit = false;
@@ -105,6 +103,8 @@ static uint32_t pulse_valve(uint32_t open_us) {
 
         //prototype jet timing sequence
 int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
+    laser_onoff(1); // Turn on the laser for the timing sequence
+    sleep_ms(1); // Give the laser a moment to stabilize
     uint32_t ts[NUM_GATES];
     gates_arm();
     uint32_t t0 = pulse_valve(open_us);
