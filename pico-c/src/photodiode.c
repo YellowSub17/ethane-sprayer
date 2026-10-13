@@ -99,7 +99,7 @@ static uint32_t pulse_valve(uint32_t open_us) {
         //prototype jet timing sequence
 int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms) {
     laser_onoff(1); // Turn on the laser for the timing sequence
-    sleep_ms(1); // Give the laser a moment to stabilize
+    sleep_ms(100); // Give the laser a moment to stabilize
     uint32_t ts[NUM_GATES];
     gates_arm();
     uint32_t t0 = pulse_valve(open_us);
