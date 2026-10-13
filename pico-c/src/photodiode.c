@@ -88,11 +88,6 @@ static double ns_per_cycle(void) {
 static uint32_t pulse_valve(uint32_t open_us) {
     if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
 
-    // arm gates and clear the fifos from previous run
-    //gate_a_hit = gate_b_hit = gate_c_hit = false;
-    //for (int sm = 0; sm < 3; sm++) pio_sm_clear_fifos(pio0, sm);
-    //init_cycle_counter();
-
     // Exakt ventilpuls
     uint32_t t0 = time_us_32();
     gpio_put(PIN_VALVE_3, 1);
