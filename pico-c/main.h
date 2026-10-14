@@ -36,7 +36,6 @@ void N2_valve_tick(void);
 void N2_valve_var(int time1, int time2);
 void N2_valve(void);
 void photodiode_init();
-int 
 int jet_timing_sequence(uint32_t open_us, uint32_t timeout_ms);
 int jet_timing_sequence_AB(uint32_t open_us, uint32_t timeout_ms);
 int measure_gatesABC();
