@@ -86,15 +86,20 @@ static double ns_per_cycle(void) {
 
 // Pulse the N2 valve for open_us (exact busy-wait, max 20 ms)
 static uint32_t pulse_valve(uint32_t open_us) {
-    if (open_us > 20000) open_us = 20000;   // max 20 ms at the moment
+    if (open_us > 20000) open_us = 20000;
 
-    printf("N2 valve open for %u us\n", open_us);
-    stdio_flush();
+    printf("PV: enter open_us=%u func=%d dir=%d\n",
+           open_us, gpio_get_function(PIN_VALVE_3), gpio_get_dir(PIN_VALVE_3));
+    fflush(stdout);
 
     uint32_t t0 = time_us_32();
     gpio_put(PIN_VALVE_3, 1);
     while ((uint32_t)(time_us_32() - t0) < open_us) tight_loop_contents();
     gpio_put(PIN_VALVE_3, 0);
+    uint32_t t1 = time_us_32();
+
+    printf("PV: done, actual=%u us\n", t1 - t0);
+    fflush(stdout);
     return t0;
 }
 
