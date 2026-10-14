@@ -91,6 +91,9 @@ static uint32_t pulse_valve(uint32_t open_us) {
     // Exakt ventilpuls
     uint32_t t0 = time_us_32();
     gpio_put(PIN_VALVE_3, 1);
+    printf("N2 valve open for %u us\n", open_us);
+    stdio_flush();
+    stdio_flush();
     while ((uint32_t)(time_us_32() - t0) < open_us) tight_loop_contents(); //should work better than sleep_ms apparently
     gpio_put(PIN_VALVE_3, 0);
     return t0;
