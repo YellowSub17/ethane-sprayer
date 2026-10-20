@@ -139,6 +139,12 @@ int main() {
                 }
                 jet_timing_sequence_AB(open_us, timeout_ms);
             }
+            else if (strncmp(buffer, "ANALOG", 6) == 0) {
+                uint32_t open_us = 4000;
+                char *colon = strchr(buffer, ':');
+                if (colon) open_us = atoi(colon + 1);
+                capture_analog(open_us);
+            }
 
         }
         sleep_us(100);

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "hardware/adc.h"
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
@@ -92,7 +93,6 @@ static uint32_t pulse_valve(uint32_t open_us) {
     gpio_put(PIN_VALVE_3, 1);
     while ((uint32_t)(time_us_32() - t0) < open_us) tight_loop_contents();
     gpio_put(PIN_VALVE_3, 0);
-    uint32_t t1 = time_us_32();
 
     return t0;
 }
@@ -165,6 +165,43 @@ int measure_gatesAB() {
 
     printf("A-to-B Delta: %lld cycles\t%.2f ns\t%.3f us\t%.6f s\n",
            diffBA, diffBA * ns, diffBA * ns / 1000.0, diffBA * ns / 1e9);
+    stdio_flush();
+    return 0;
+}
+
+// ---- Analog logging of gate A (GPIO26) and gate B (GPIO27) ----
+#define AN_N 10000                    // ca 80-100 ms vid ~10 us per par
+static uint32_t an_t[AN_N];
+static uint16_t an_a[AN_N], an_b[AN_N];
+
+int capture_analog(uint32_t open_us) {
+    if (open_us > 20000) open_us = 20000;
+
+    adc_init();
+    adc_gpio_init(26);
+    adc_gpio_init(27);
+
+    laser_onoff(1);
+    sleep_ms(100);
+
+    uint32_t t0 = time_us_32();
+    gpio_put(PIN_VALVE_3, 1);
+    for (int i = 0; i < AN_N; i++) {
+        uint32_t t = time_us_32() - t0;
+        if (t >= open_us) gpio_put(PIN_VALVE_3, 0);
+        adc_select_input(0); (void)adc_read(); an_a[i] = adc_read();
+        adc_select_input(1); (void)adc_read(); an_b[i] = adc_read();
+        an_t[i] = t;
+    }
+    gpio_put(PIN_VALVE_3, 0);
+    laser_onoff(0);
+
+    printf("AN_BEGIN open_us=%u n=%d\n", open_us, AN_N);
+    for (int i = 0; i < AN_N; i++) {
+        printf("AN,%u,%u,%u\n", an_t[i], an_a[i], an_b[i]);
+        if ((i & 255) == 255) stdio_flush();
+    }
+    printf("AN_END\n");
     stdio_flush();
     return 0;
 }
