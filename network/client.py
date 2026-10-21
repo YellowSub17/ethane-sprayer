@@ -3,6 +3,8 @@ import threading
 import queue
 import time
 import subprocess
+import csv
+from pathlib import Path
 
 from datetime import datetime
 
@@ -187,13 +189,96 @@ class NetworkClient:
                 while "\n" in buffer:
                     line, buffer = buffer.split("\n", 1)
                     if line.strip():
+                        
                         now = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-                        self.log_queue.put(f"[{now}] RX: {line.strip()}")
-                        self.rx_queue.put(f"[RX] {line.strip()}")
-                        print(f"[{now}] RX: {line.strip()}")
+                        message = line.strip()
+
+                        self.log_queue.put(f"[{now}] RX: {message}")
+                        self.rx_queue.put(f"[RX] {message}")
+                        print(f"[{now}] RX: {message}")
+
+                        save_rx_to_csv(now, message)
+
             except Exception:
                 self.connected = False
                 break
+
+
+
+
+
+PLOTS_DIR = Path(__file__).resolve().parent.parent / "plots"
+PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+
+MAX_VALUES = 10_000 #one series of measurements per file, then start a new file
+
+
+def get_csv_file(index):
+    if index == 1:
+        return PLOTS_DIR / "analog.csv"
+    return PLOTS_DIR / f"analog{index}.csv"
+
+
+def count_values(path):
+    if not path.exists() or path.stat().st_size == 0:
+        return 0
+
+    with path.open("r", newline="", encoding="utf-8") as file:
+        # Räkna datarader, exklusive rubrikraden
+        return max(0, sum(1 for _ in csv.reader(file)) - 1)
+
+
+# Hitta rätt fil vid start, så att tidigare mätdata bevaras
+file_index = 1
+
+while get_csv_file(file_index + 1).exists():
+    file_index += 1
+
+current_file = get_csv_file(file_index)
+current_count = count_values(current_file)
+
+if current_count >= MAX_VALUES:
+    file_index += 1
+    current_file = get_csv_file(file_index)
+    current_count = count_values(current_file)
+
+
+def save_rx_to_csv(timestamp, message):
+    global file_index, current_file, current_count
+
+    data = [value.strip() for value in message.split(",")]
+
+    # Spara endast AN-meddelanden
+    if not data or data[0] != "AN":
+        return
+
+    # Byt fil när 10 000 mätvärden har sparats
+    if current_count >= MAX_VALUES:
+        file_index += 1
+        current_file = get_csv_file(file_index)
+        current_count = count_values(current_file)
+
+    write_header = (
+        not current_file.exists()
+        or current_file.stat().st_size == 0
+    )
+
+    with current_file.open(
+        "a", newline="", encoding="utf-8"
+    ) as file:
+        writer = csv.writer(file)
+
+        if write_header:
+            writer.writerow([
+                "timestamp", "type",
+                "value1", "value2", "value3"
+            ])
+
+        writer.writerow([timestamp] + data)
+        file.flush()
+
+    current_count += 1
+
 
 
 
