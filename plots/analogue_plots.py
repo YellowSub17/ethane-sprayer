@@ -1,6 +1,10 @@
 import csv
 import matplotlib.pyplot as plt
 
+import numpy as np
+dt = np.diff(t)
+print(dt.mean(), dt.min(), dt.max())
+
 t, a, b = [], [], []
 with open("shot.csv") as f:
     for row in csv.reader(f):
