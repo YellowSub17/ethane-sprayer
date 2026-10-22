@@ -2,6 +2,8 @@ import socket
 import threading
 import serial
 import time
+import re
+from pathlib import Path
 
 import builtins
 from datetime import datetime
@@ -17,12 +19,46 @@ def timestamped_print(*args, **kwargs):
 # Override built-in print globally for this file
 print = timestamped_print
 
+class AnalogSaver:
+    def __init__(self, folder):
+        self.folder = Path(folder)
+        self.folder.mkdir(parents=True, exist_ok=True)
+        self.f = None
+        self.rows = 0
+        self.name = None
+
+    def _next_name(self):
+        nums = [int(m.group(1)) for p in self.folder.glob("analog*.csv")
+                if (m := re.fullmatch(r"analog(\d+)\.csv", p.name))]
+        return f"analog{max(nums, default=0) + 1}.csv"
+
+    def feed(self, line):
+        """None = inte analogdata. '' = svälj raden. Annars en statusrad att skicka vidare."""
+        if line.startswith("AN_BEGIN"):
+            if self.f:
+                self.f.close()
+            self.name = self._next_name()
+            self.f = open(self.folder / self.name, "w", buffering=1 << 16)
+            self.f.write("t_us,A_raw,B_raw\n")
+            self.rows = 0
+            return f"Saving analog series to {self.name}"
+        if line.startswith("AN,") and self.f:
+            self.f.write(line[3:] + "\n")
+            self.rows += 1
+            return ""
+        if line.startswith("AN_END") and self.f:
+            self.f.close()
+            self.f = None
+            return f"Saved {self.rows} rows to {self.name}"
+        return None
+    
 class NetworkServer:
     def __init__(self, tcp_port=5001, serial_port='/dev/ttyACM0', baud=115200, debug=False):
         self.tcp_port = tcp_port
         self.serial_port = serial_port
         self.baud = baud
         self.debug = debug
+        self.saver = AnalogSaver("/home/ethanesprayer/ethane-sprayer/plots")
         self.running =False
         self.client_socket = None
 
@@ -125,18 +161,25 @@ class NetworkServer:
         """Reads responses from Pico UART and forwards them over TCP."""
         while self.running:
             try:
-                if self.pico and self.pico.in_waiting > 0:
+                got_data = False
+                # Töm allt som finns, utan paus mellan raderna
+                while self.pico and self.pico.in_waiting > 0:
+                    got_data = True
                     response = self.pico.readline().decode('utf-8', errors='ignore').strip()
-                    # print(f"[SERVER] Got message from pico: '{response}'")
-                    if response:
-                        self.send(response)
+                    if not response:
+                        continue
+                    status = self.saver.feed(response)
+                    if status is None:
+                        self.send(response)      # vanlig rad
+                    elif status:
+                        self.send(status)        # bara statusrader från spararen
+                if not got_data:
+                    time.sleep(0.001)            # vila bara när det inte finns något att läsa
             except Exception as e:
                 print(f"UART error: '{e}'")
                 self.stop()
                 time.sleep(2)
                 self.start()
-
-            time.sleep(0.01)  # Prevent CPU spinning
 
 
 if __name__ == "__main__":
