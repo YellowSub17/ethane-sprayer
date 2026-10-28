@@ -321,8 +321,8 @@ void motor_tick(void) {
         jt_phase = JT_TO_POT;
         printf("JETTEST: going to POT (200 steps)\n");
         fflush(stdout);
-        step_time(2000); //set the plunging speed here
-        motor_set_steps(300);
+        step_time(1200); //set the plunging speed here
+        motor_set_steps(330);
         if (current_state != STATE_MOVING) jt_phase = JT_OFF;
         return;
     }
