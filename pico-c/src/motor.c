@@ -269,15 +269,17 @@ static void jet_test_next(void) {
     case JT_MOVE1:
         jt_phase = JT_WAIT;
         jt_t0 = time_us_64();
-        printf("JETTEST: waiting 5 s\n");
+        printf("JETTEST: Blotting...\n");
         fflush(stdout);
         break;
     case JT_MOVE2:
+        prinff("JETTEST: moving to jet position\n");
+        fflush(stdout);
         jt_phase = JT_JET;                    // körs i nästa tick
         break;
     case JT_TO_POT:
         jt_phase = JT_OFF;
-        printf("JETTEST: done, position %d\n", absolute_position);
+        printf("JETTEST: done");
         fflush(stdout);
         break;
     default:
@@ -313,7 +315,7 @@ void motor_tick(void) {
         jt_phase = JT_TO_POT;
         printf("JETTEST: going to POT (200 steps)\n");
         fflush(stdout);
-        step_time(3200); //set the plunging speed here
+        step_time(2000); //set the plunging speed here
         motor_set_steps(200);
         if (current_state != STATE_MOVING) jt_phase = JT_OFF;
         return;
