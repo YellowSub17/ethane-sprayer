@@ -145,6 +145,8 @@ int main() {
                 if (colon) open_us = atoi(colon + 1);
                 capture_analog(open_us);
             }
+            else if (strncmp(buffer, "JETTEST", 7) == 0) { motor_jet_test(); 
+            }   
 
         }
         sleep_us(100);

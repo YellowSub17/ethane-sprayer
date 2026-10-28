@@ -33,6 +33,14 @@ static int target_steps = 0;
 static int current_dir = 0;
 static int absolute_position = 0;
 
+#define JET_SIGN         1      //prototype sequence variables
+#define JET_OPEN_US      4000
+#define JET_TIMEOUT_MS   200
+
+typedef enum { JT_OFF, JT_MOVE1, JT_WAIT, JT_MOVE2, JT_JET, JT_DELAY, JT_TO_POT } JetPhase;
+static JetPhase jt_phase = JT_OFF;
+static uint64_t jt_t0 = 0;
+
 static int i = 0; // Index for the accuracy test results
 int list[5][2] = {
     {100, 100},
@@ -238,6 +246,43 @@ void motor_init(void) {
     gpio_register_handler(PIN_MOTOR_NOT_HARDLIMIT, GPIO_IRQ_EDGE_FALL, motor_limit_isr);
 }
 
+void motor_jet_test(void) {
+    if (!motor_enabled || !homed) {
+        printf("ERROR: Enable and home the motor first\n");
+        fflush(stdout);
+        return;
+    }
+    jt_phase = JT_MOVE1;
+    printf("JETTEST: stepping 50\n");
+    fflush(stdout);
+    motor_set_steps(JET_SIGN * 50);
+    if (current_state != STATE_MOVING) {      // motor_set_steps refused (limit)
+        jt_phase = JT_OFF;
+        printf("JETTEST: aborted\n");
+        fflush(stdout);
+    }
+}
+
+static void jet_test_next(void) {
+    switch (jt_phase) {
+    case JT_MOVE1:
+        jt_phase = JT_WAIT;
+        jt_t0 = time_us_64();
+        printf("JETTEST: waiting 5 s\n");
+        fflush(stdout);
+        break;
+    case JT_MOVE2:
+        jt_phase = JT_JET;                    // körs i nästa tick
+        break;
+    case JT_TO_POT:
+        jt_phase = JT_OFF;
+        printf("JETTEST: done, position %d\n", absolute_position);
+        fflush(stdout);
+        break;
+    default:
+        break;
+    }
+}
 
 
 
@@ -246,6 +291,31 @@ void motor_tick(void) {
 
     uint64_t now = time_us_64();
 
+        if (jt_phase == JT_WAIT && now - jt_t0 >= 5000000) {
+        jt_phase = JT_MOVE2;
+        printf("JETTEST: stepping 150\n");
+        fflush(stdout);
+        motor_set_steps(JET_SIGN * 150);
+        if (current_state != STATE_MOVING) jt_phase = JT_OFF;
+        return;
+    }
+    if (jt_phase == JT_JET) {
+        jt_phase = JT_DELAY;
+        printf("JETTEST: jet sequence at position %d\n", absolute_position);
+        fflush(stdout);
+        jet_timing_sequence_AB(JET_OPEN_US, JET_TIMEOUT_MS);   // blockerar ca 0,3 s
+        jt_t0 = time_us_64();
+        return;
+    }
+    if (jt_phase == JT_DELAY && now - jt_t0 >= 200000) {
+        jt_phase = JT_TO_POT;
+        printf("JETTEST: going to POT\n");
+        fflush(stdout);
+        step_time(3200); //set the plunging speed here
+        motor_set_steps(zpositive_limit - 1 - absolute_position);
+        if (current_state != STATE_MOVING) jt_phase = JT_OFF;
+        return;
+    }
     if (current_state == STATE_HOMING_NOT) {
 
         if (gpio_get(PIN_MOTOR_NOT) == 1) {
@@ -403,7 +473,6 @@ void motor_tick(void) {
         }
     }
 
-
     if (current_state == STATE_MOVING && target_steps > 0) {
 
         if (now - last_step_time >= STEP_DELAY_US) {
@@ -420,7 +489,7 @@ void motor_tick(void) {
                 current_state = STATE_IDLE;
                 printf("Motion complete. Absolute Position: %d\n", absolute_position);
                 fflush(stdout);
-
+                jet_test_next();
             }
         }
     }

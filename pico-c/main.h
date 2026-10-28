@@ -29,6 +29,7 @@ void motor_disable(void);
 void motor_init(void);
 void step_time(int time);
 void motor_tick(void);
+void motor_jet_test(void);               
 void ethane_valve_1_init(void);
 void ethane_valve_1(void);
 void N2_valve_init(void);
