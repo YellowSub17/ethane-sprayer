@@ -274,10 +274,10 @@ static void jet_test_next(void) {
         break;
     case JT_MOVE2:
         jt_phase = JT_MOVE3;
-        printf("JETTEST: 50 steps to laser level\n");
+        printf("JETTEST: 20 steps to laser level\n");
         fflush(stdout);
-        STEP_DELAY_US = 5000;
-        motor_set_steps(JET_SIGN * 50);
+        step_time(5000);
+        motor_set_steps(JET_SIGN * 20);
         if (current_state != STATE_MOVING) { STEP_DELAY_US = 3200; jt_phase = JT_OFF; }
         break;
     case JT_MOVE3:
@@ -322,7 +322,7 @@ void motor_tick(void) {
         printf("JETTEST: going to POT (200 steps)\n");
         fflush(stdout);
         step_time(2000); //set the plunging speed here
-        motor_set_steps(200);
+        motor_set_steps(300);
         if (current_state != STATE_MOVING) jt_phase = JT_OFF;
         return;
     }
