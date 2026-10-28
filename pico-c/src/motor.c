@@ -255,7 +255,8 @@ void motor_jet_test(void) {
     jt_phase = JT_MOVE1;
     printf("JETTEST: stepping 50\n");
     fflush(stdout);
-    motor_set_steps(JET_SIGN * 50);
+    step_time(2000); 
+    motor_set_steps(JET_SIGN * 200);
     if (current_state != STATE_MOVING) {      // motor_set_steps refused (limit)
         jt_phase = JT_OFF;
         printf("JETTEST: aborted\n");
@@ -295,7 +296,8 @@ void motor_tick(void) {
         jt_phase = JT_MOVE2;
         printf("JETTEST: stepping 150\n");
         fflush(stdout);
-        motor_set_steps(JET_SIGN * 150);
+        steptime(5000); //set the plunging speed here
+        motor_set_steps(JET_SIGN * 50);
         if (current_state != STATE_MOVING) jt_phase = JT_OFF;
         return;
     }
@@ -312,7 +314,7 @@ void motor_tick(void) {
         printf("JETTEST: going to POT\n");
         fflush(stdout);
         step_time(3200); //set the plunging speed here
-        motor_set_steps(zpositive_limit - 1 - absolute_position);
+        motor_set_steps(150);
         if (current_state != STATE_MOVING) jt_phase = JT_OFF;
         return;
     }
