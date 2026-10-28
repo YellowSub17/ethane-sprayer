@@ -273,7 +273,7 @@ static void jet_test_next(void) {
         fflush(stdout);
         break;
     case JT_MOVE2:
-        prinff("JETTEST: moving to jet position\n");
+        printf("JETTEST: moving to jet position\n");
         fflush(stdout);
         jt_phase = JT_JET;                    // körs i nästa tick
         break;
