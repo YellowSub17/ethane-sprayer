@@ -296,7 +296,7 @@ void motor_tick(void) {
         jt_phase = JT_MOVE2;
         printf("JETTEST: stepping 150\n");
         fflush(stdout);
-        steptime(5000); //set the plunging speed here
+        step_time(5000); //set the plunging speed here
         motor_set_steps(JET_SIGN * 50);
         if (current_state != STATE_MOVING) jt_phase = JT_OFF;
         return;
