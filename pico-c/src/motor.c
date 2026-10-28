@@ -276,7 +276,7 @@ static void jet_test_next(void) {
         jt_phase = JT_MOVE3;
         printf("JETTEST: 50 steps to laser level\n");
         fflush(stdout);
-        STEP_DELAY_US = JET_SLOW_US;
+        STEP_DELAY_US = 5000;
         motor_set_steps(JET_SIGN * 50);
         if (current_state != STATE_MOVING) { STEP_DELAY_US = 3200; jt_phase = JT_OFF; }
         break;
