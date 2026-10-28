@@ -37,7 +37,7 @@ static int absolute_position = 0;
 #define JET_OPEN_US      4000
 #define JET_TIMEOUT_MS   200
 
-typedef enum { JT_OFF, JT_MOVE1, JT_WAIT, JT_MOVE2, JT_JET, JT_DELAY, JT_TO_POT } JetPhase;
+typedef enum { JT_OFF, JT_MOVE1, JT_WAIT, JT_MOVE2,JT_MOVE3, JT_JET, JT_DELAY, JT_TO_POT } JetPhase;
 static JetPhase jt_phase = JT_OFF;
 static uint64_t jt_t0 = 0;
 
@@ -273,9 +273,15 @@ static void jet_test_next(void) {
         fflush(stdout);
         break;
     case JT_MOVE2:
-        printf("JETTEST: moving to jet position\n");
+        jt_phase = JT_MOVE3;
+        printf("JETTEST: 50 steps to laser level\n");
         fflush(stdout);
-        jt_phase = JT_JET;                    // körs i nästa tick
+        STEP_DELAY_US = JET_SLOW_US;
+        motor_set_steps(JET_SIGN * 50);
+        if (current_state != STATE_MOVING) { STEP_DELAY_US = 3200; jt_phase = JT_OFF; }
+        break;
+    case JT_MOVE3:
+        jt_phase = JT_JET;                  // jetsekvensen körs i nästa tick
         break;
     case JT_TO_POT:
         jt_phase = JT_OFF;
@@ -296,9 +302,9 @@ void motor_tick(void) {
 
         if (jt_phase == JT_WAIT && now - jt_t0 >= 5000000) {
         jt_phase = JT_MOVE2;
-        printf("JETTEST: stepping 150\n");
+        printf("JETTEST: Moving to jet stage\n");
         fflush(stdout);
-        step_time(5000); 
+        step_time(1500); 
         motor_set_steps(JET_SIGN * 150);
         if (current_state != STATE_MOVING) jt_phase = JT_OFF;
         return;
