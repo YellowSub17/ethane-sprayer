@@ -64,6 +64,10 @@ int main() {
 
     char buffer[64];
     int val = 0;
+
+
+
+
     int val1 = 0;
     int val2 = 0;
 
@@ -145,8 +149,8 @@ int main() {
                 if (colon) open_us = atoi(colon + 1);
                 capture_analog(open_us);
             }
-            else if (strncmp(buffer, "JETTEST", 7) == 0) { motor_jet_test(); 
-            }   
+            else if (strncmp(buffer, "JETTEST", 7) == 0) { motor_jet_test();
+            }
 
         }
         sleep_us(100);
